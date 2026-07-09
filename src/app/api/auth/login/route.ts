@@ -1,12 +1,15 @@
-import { sendSuccess, sendError } from "@/utils/apiResponse";
+import { NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+// Tumhare custom response handlers (agar inmein error aaye toh simply NextResponse.json use kar lena)
+import { sendSuccess, sendError } from "@/utils/apiResponse"; 
+
 export async function POST(req: Request) {
   try {
-    // 1. Connect to MongoDB
+    // 1. Connect to MongoDB (Ab yeh safely cached connection use karega)
     await connectToDatabase();
 
     const body = await req.json();
@@ -16,8 +19,7 @@ export async function POST(req: Request) {
       return sendError("Email and password are required", 400);
     }
 
-    // 2. Find user by email. 
-    // Note: Humein '.select("+password")' use karna padega kyunki humne schema mein password ko 'select: false' rakha tha (for security).
+    // 2. Find user by email and select password explicitly
     const user = await User.findOne({ email }).select("+password");
 
     if (!user) {
@@ -31,43 +33,53 @@ export async function POST(req: Request) {
       return sendError("Invalid email or password", 401);
     }
 
-    // 4. Generate Real JWT Token
+    // Check if JWT_SECRET exists
+    if (!process.env.JWT_SECRET) {
+      console.error("CRITICAL: JWT_SECRET is missing in .env");
+      return sendError("Server configuration error", 500);
+    }
+
+    // 4. Generate JWT Token
     const tokenPayload = {
       userId: user._id,
       role: user.role,
     };
     
-    // Token 1 din ke liye valid rahega
-    const token = jwt.sign(tokenPayload, process.env.JWT_SECRET!, { expiresIn: "1d" });
+    const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: "1d" });
 
-    // 5. Send Response and Set Cookies
+    // 5. Setup Response
     const response = sendSuccess("Login successful", { 
       name: user.name, 
-      role: user.role 
+      role: user.role,
+      email: user.email
     });
 
-    // Dummy token hata ke ab REAL token set kar rahe hain
+    // 6. Set Cookies securely
+    const oneDay = 60 * 60 * 24; // in seconds
+
     response.cookies.set("authToken", token, { 
       httpOnly: true, 
-      secure: process.env.NODE_ENV === "production", 
+      secure: process.env.NODE_ENV === "production", // true on Vercel, false on localhost
+      sameSite: "strict",
       path: "/",
-      maxAge: 60 * 60 * 24 // 1 Day
+      maxAge: oneDay 
     });
     
     response.cookies.set("userRole", user.role, { 
       path: "/",
-      maxAge: 60 * 60 * 24 // 1 Day
+      maxAge: oneDay
     });
     
-    // Also set the user's display name in a cookie for UI display
     response.cookies.set("userName", user.name, {
       path: "/",
-      maxAge: 60 * 60 * 24 // 1 Day
+      maxAge: oneDay
     });
 
     return response;
-  } catch (error) {
-    console.error("Login Error:", error);
+
+  } catch (error: any) {
+    // Exact error logging in terminal
+    console.error("🚨 Login API Error:", error.message || error);
     return sendError("Internal Server Error", 500);
   }
 }

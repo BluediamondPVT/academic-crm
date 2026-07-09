@@ -1,38 +1,46 @@
+// src/app/api/seed/route.ts
+import { NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
 import { ROLES } from "@/config/roles";
-import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
     await connectToDatabase();
+
+    // Check if demo users already exist
+    const adminExists = await User.findOne({ email: "admin@bditacademic.com" });
     
-    // Check if users already exist
-    const existingUsers = await User.countDocuments();
-    if (existingUsers > 0) {
-      return NextResponse.json({ message: "Users already exist!" });
+    if (adminExists) {
+        return NextResponse.json({ message: "Database already seeded!" });
     }
 
+    // Encrypt the password once
     const hashedPassword = await bcrypt.hash("password123", 10);
 
-    await User.create([
-      {
-        name: "Super Admin",
-        email: "admin@bditacademic.com",
-        password: hashedPassword,
-        role: ROLES.ADMIN,
-      },
-      {
-        name: "AbuSalim Counselor",
-        email: "counselor@bditacademic.com",
-        password: hashedPassword,
-        role: ROLES.COUNSELOR,
-      }
-    ]); 
+    // Create Admin User
+    await User.create({
+      name: "Super Admin",
+      email: "admin@bditacademic.com",
+      password: hashedPassword,
+      role: ROLES.ADMIN,
+      isActive: true,
+    });
 
-    return NextResponse.json({ message: "Dummy users created successfully!" });
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to create users" }, { status: 500 });
+    // Create Counselor User
+    await User.create({
+      name: "Test Counselor",
+      email: "counselor@bditacademic.com",
+      password: hashedPassword,
+      role: ROLES.COUNSELOR,
+      isActive: true,
+    });
+
+    return NextResponse.json({ message: "Database successfully seeded with demo users!" });
+
+  } catch (error: any) {
+    console.error("Seeding Error:", error);
+    return NextResponse.json({ error: "Failed to seed database" }, { status: 500 });
   }
 }

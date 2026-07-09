@@ -10,7 +10,8 @@ import {
   LogOut, 
   ChevronLeft, 
   ChevronRight,
-  X
+  X,
+  GraduationCap,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -40,11 +41,19 @@ export default function Sidebar({ role }: SidebarProps) {
       }
     } catch (err) {
       console.error(err);
-    }
+    } 
   };
 
-  const navItems = [
+ const navItems = [
     { name: "Dashboard", href: role === "ADMIN" ? "/admin" : "/counselor", icon: LayoutDashboard },
+    
+    // 🔥 Admin Only Tabs (Counselors aur Universities dono yahan aayenge)
+    ...(role === "ADMIN" ? [
+      { name: "Counselors", href: "/admin/counselors", icon: Users },
+      { name: "Universities", href: "/admin/universities", icon: GraduationCap } 
+    ] : []),
+    
+    // Common Tabs (Dono ko dikhenge)
     { name: "Leads", href: "#", icon: Users },
     { name: "Settings", href: "#", icon: Settings },
   ];

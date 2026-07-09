@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import Sidebar from "@/components/layout/Sidebar";
-import Header from "@/components/layout/Header";
+// import Header from "@/components/layout/Header";
 
 export default async function DashboardLayout({
   children,
@@ -21,7 +21,7 @@ export default async function DashboardLayout({
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         
         {/* Sticky Header */}
-        <Header role={userRole} userName={userName} />
+        {/* <Header role={userRole} userName={userName} /> */}
 
         {/* Scrollable Page Content */}
         <main className="flex-1 overflow-y-auto p-6 sm:p-8">
