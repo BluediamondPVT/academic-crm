@@ -4,13 +4,12 @@ import University from '@/models/University';
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
-) {
+  { params }: { params: Promise<{ id: string }> }
+) { 
   try {
     await connectToDatabase();
     
-    // In Next.js 15, params is asynchronous, but we can usually await it or just use params.id depending on the version. Assuming standard App Router:
-    const { id } = await Promise.resolve(params);
+    const { id } = await params;
 
     if (!id) {
       return NextResponse.json({ error: 'ID is required' }, { status: 400 });
