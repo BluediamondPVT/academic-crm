@@ -1,5 +1,14 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
+export interface ICourse {
+  name: string;
+  specialization?: string;
+  duration: number;
+  totalFee: number;
+  yearFee: number;
+  semesterFee: number;
+}
+
 export interface IUniversity extends Document {
   name: string;
   aggregation: string;
@@ -8,10 +17,19 @@ export interface IUniversity extends Document {
   modeOfLearning: 'Online' | 'Distance' | 'Regular';
   payout: string;
   websiteUrl: string;
-  courses: string[];
+  courses: ICourse[];
   createdAt: Date;
   updatedAt: Date;
 }
+
+const CourseSchema: Schema = new Schema({
+  name: { type: String, required: true },
+  specialization: { type: String },
+  duration: { type: Number, required: true },
+  totalFee: { type: Number, required: true },
+  yearFee: { type: Number, required: true },
+  semesterFee: { type: Number, required: true },
+});
 
 const UniversitySchema: Schema = new Schema(
   {
@@ -26,11 +44,16 @@ const UniversitySchema: Schema = new Schema(
     },
     payout: { type: String, required: true },
     websiteUrl: { type: String, required: true },
-    courses: { type: [String], required: true },
+    courses: { type: [CourseSchema], required: true },
   },
   { timestamps: true }
 );
 
-const University = mongoose.models.University || mongoose.model<IUniversity>('University', UniversitySchema);
+// Clear cached model to ensure schema updates are applied during hot-reload/development
+if (mongoose.models.University) {
+  delete mongoose.models.University;
+}
+
+const University = mongoose.model<IUniversity>('University', UniversitySchema);
 
 export default University;

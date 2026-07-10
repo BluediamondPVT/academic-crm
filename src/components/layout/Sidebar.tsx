@@ -114,7 +114,7 @@ export default function Sidebar({ role }: SidebarProps) {
           }`}
         >
           <LogOut size={20} className="text-rose-400" />
-          {(!isCollapsed || isMobileOpen) && <span className="font-semibold text-sm">Logout</span>}
+          {(!isCollapsed || isMobileOpen) && <span className="font-semibold text-rose-400 text-sm">Logout</span>}
         </button>
       </div>
     </div>
@@ -131,11 +131,11 @@ export default function Sidebar({ role }: SidebarProps) {
         {/* Toggle Collapse Button on Edge */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute -right-3.5 top-5 bg-slate-900 border border-slate-800 hover:bg-slate-800 rounded-full p-2 text-slate-400 hover:text-white shadow-sm transition-all duration-200 z-50"
+          className="absolute -right-3.5 top-5 bg-white border border-slate-800 hover:bg-slate-800 rounded-full p-2 text-black hover:text-white shadow-sm transition-all duration-200 z-50"
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+          {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
         </button>
 
         {sidebarContent}

@@ -1,11 +1,21 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { 
   Building, MapPin, Phone, Globe, DollarSign, GraduationCap, Award, 
   Loader2, X, Plus, FileText, CheckCircle, AlertTriangle, RefreshCcw, 
-  Eye, Trash2
+  Eye, Trash2, Edit2
 } from 'lucide-react';
+
+interface Course {
+  name: string;
+  specialization?: string;
+  duration: number;
+  totalFee: number;
+  yearFee: number;
+  semesterFee: number;
+}
 
 interface University {
   _id: string;
@@ -16,7 +26,7 @@ interface University {
   modeOfLearning: 'Online' | 'Distance' | 'Regular';
   payout: string;
   websiteUrl: string;
-  courses: string[];
+  courses: Course[];
 }
 
 export default function UniversitiesDashboard() {
@@ -34,8 +44,15 @@ export default function UniversitiesDashboard() {
     payout: '',
     websiteUrl: '',
   });
-  const [courses, setCourses] = useState<string[]>([]);
-  const [courseInput, setCourseInput] = useState('');
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [courseForm, setCourseForm] = useState({
+    name: '',
+    specialization: '',
+    duration: '',
+    totalFee: '',
+    yearFee: '',
+    semesterFee: '',
+  });
   const [formLoading, setFormLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -62,16 +79,67 @@ export default function UniversitiesDashboard() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleAddCourse = (e: React.MouseEvent<HTMLButtonElement> | React.KeyboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    if (courseInput.trim() !== '' && !courses.includes(courseInput.trim())) {
-      setCourses([...courses, courseInput.trim()]);
-      setCourseInput('');
-    }
+  const handleCourseFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setCourseForm(prev => {
+      const updated = { ...prev, [name]: value };
+      
+      // Auto-calculate yearFee and semesterFee
+      if (name === 'totalFee' || name === 'duration') {
+        const total = Number(updated.totalFee);
+        const dur = Number(updated.duration);
+        if (!isNaN(total) && !isNaN(dur) && dur > 0) {
+          const yrFee = Math.round(total / dur);
+          const semFee = Math.round(yrFee / 2);
+          updated.yearFee = String(yrFee);
+          updated.semesterFee = String(semFee);
+        }
+      }
+      return updated;
+    });
   };
 
-  const handleRemoveCourse = (courseToRemove: string) => {
-    setCourses(courses.filter((course) => course !== courseToRemove));
+  const handleAddCourse = (e: React.FormEvent) => {
+    e.preventDefault();
+    const { name, specialization, duration, totalFee, yearFee, semesterFee } = courseForm;
+    
+    if (!name || !duration || !totalFee || !yearFee || !semesterFee) {
+      alert('Please fill out all course details (Name, Duration, Total Fee, Year Fee, Semester Fee).');
+      return;
+    }
+    
+    const newCourse: Course = {
+      name: name.trim(),
+      specialization: specialization.trim() || undefined,
+      duration: Number(duration),
+      totalFee: Number(totalFee),
+      yearFee: Number(yearFee),
+      semesterFee: Number(semesterFee),
+    };
+
+    const isDuplicate = courses.some(
+      c => c.name.toLowerCase() === newCourse.name.toLowerCase() && 
+           c.specialization?.toLowerCase() === newCourse.specialization?.toLowerCase()
+    );
+    
+    if (isDuplicate) {
+      alert('This course/specialization has already been added.');
+      return;
+    }
+    
+    setCourses([...courses, newCourse]);
+    setCourseForm({
+      name: '',
+      specialization: '',
+      duration: '',
+      totalFee: '',
+      yearFee: '',
+      semesterFee: '',
+    });
+  };
+
+  const handleRemoveCourse = (indexToRemove: number) => {
+    setCourses(courses.filter((_, index) => index !== indexToRemove));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -270,16 +338,23 @@ export default function UniversitiesDashboard() {
                     <td className="px-6 py-4 text-sm text-gray-500">
                       {uni.location}
                     </td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <button className="inline-flex items-center px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-bold rounded-md transition-colors">
-                        View
-                      </button>
-                      {/* <button 
-                        onClick={() => handleDelete(uni._id)}
-                        className="inline-flex items-center px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-md transition-colors"
-                      >
-                        Delete
-                      </button> */}
+                    <td className="px-6 py-4 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-2">
+                        <Link
+                          href={`/admin/universities/view/${uni._id}`}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-bold rounded-lg transition-colors shadow-xs"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          View
+                        </Link>
+                        <Link
+                          href={`/admin/universities/edit/${uni._id}`}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-bold rounded-lg transition-colors shadow-xs"
+                        >
+                          <Edit2 className="h-3.5 w-3.5" />
+                          Edit
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -455,52 +530,161 @@ export default function UniversitiesDashboard() {
                   </div>
                 </div>
 
-                {/* Dynamic Courses Tag System */}
-                <div className="col-span-1 md:col-span-2 space-y-2 pt-1">
-                  <label className="text-xs font-bold text-gray-600 uppercase">Offered Courses</label>
+                {/* Dynamic Courses Section */}
+                <div className="col-span-1 md:col-span-2 space-y-4 pt-2 border-t border-gray-100 mt-4">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Offered Courses & Fees Details
+                    </label>
+                    <span className="text-xs bg-blue-50 text-blue-600 px-2.5 py-1 rounded-md font-semibold">
+                      {courses.length} Added
+                    </span>
+                  </div>
                   
-                  <div className="flex items-center gap-2">
-                    <div className="relative flex-grow">
-                      <input
-                        type="text"
-                        value={courseInput}
-                        onChange={(e) => setCourseInput(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleAddCourse(e)}
-                        className="block w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none"
-                        placeholder="Type course and press enter (e.g. MBA)"
-                      />
+                  {/* Course Entry Form */}
+                  <div className="p-4 bg-gray-50 border border-gray-200/80 rounded-xl space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {/* Course Name */}
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase">Course Name *</label>
+                        <input
+                          type="text"
+                          name="name"
+                          value={courseForm.name}
+                          onChange={handleCourseFormChange}
+                          placeholder="e.g. BBA, BCA, MBA"
+                          className="block w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-medium text-gray-800"
+                        />
+                      </div>
+
+                      {/* Specialization / Full Name */}
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase">Specialization / Full Name</label>
+                        <input
+                          type="text"
+                          name="specialization"
+                          value={courseForm.specialization}
+                          onChange={handleCourseFormChange}
+                          placeholder="e.g. Finance, Physics/Chemistry"
+                          className="block w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-medium text-gray-800"
+                        />
+                      </div>
+
+                      {/* Duration */}
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase">Duration (Years) *</label>
+                        <input
+                          type="number"
+                          name="duration"
+                          min="1"
+                          max="10"
+                          value={courseForm.duration}
+                          onChange={handleCourseFormChange}
+                          placeholder="e.g. 3"
+                          className="block w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-medium text-gray-800"
+                        />
+                      </div>
+
+                      {/* Total Fee */}
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase">Total Fee (₹) *</label>
+                        <input
+                          type="number"
+                          name="totalFee"
+                          min="0"
+                          value={courseForm.totalFee}
+                          onChange={handleCourseFormChange}
+                          placeholder="e.g. 199200"
+                          className="block w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-medium text-gray-800"
+                        />
+                      </div>
+
+                      {/* Per Year Fee */}
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase">Per Year Fee (₹) *</label>
+                        <input
+                          type="number"
+                          name="yearFee"
+                          min="0"
+                          value={courseForm.yearFee}
+                          onChange={handleCourseFormChange}
+                          placeholder="e.g. 66400"
+                          className="block w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-medium text-gray-800"
+                        />
+                      </div>
+
+                      {/* Semester Fee */}
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase">Semester Fee (₹) *</label>
+                        <input
+                          type="number"
+                          name="semesterFee"
+                          min="0"
+                          value={courseForm.semesterFee}
+                          onChange={handleCourseFormChange}
+                          placeholder="e.g. 33200"
+                          className="block w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-medium text-gray-800"
+                        />
+                      </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={handleAddCourse}
-                      className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors outline-none"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Add
-                    </button>
+
+                    <div className="flex justify-end pt-1">
+                      <button
+                        type="button"
+                        onClick={handleAddCourse}
+                        className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm outline-none"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        Add Course to List
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Course Tags Container */}
-                  <div className="flex flex-wrap gap-2 mt-2 min-h-[38px] p-3 bg-gray-50 border border-gray-100 rounded-lg">
-                    {courses.length === 0 ? (
-                      <span className="text-xs text-gray-400 w-full text-center">No courses added yet</span>
-                    ) : (
-                      courses.map((course, index) => (
-                        <span 
-                          key={index}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100"
-                        >
-                          {course}
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveCourse(course)}
-                            className="hover:bg-blue-200 rounded-full p-0.5 transition-colors focus:outline-none"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </span>
-                      ))
-                    )}
+                  {/* Courses List Table */}
+                  <div className="border border-gray-150 rounded-xl overflow-hidden bg-white max-h-[220px] overflow-y-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead className="bg-gray-100/80 sticky top-0">
+                        <tr>
+                          <th className="px-3 py-2 font-bold text-gray-600 border-b border-gray-150">Course Name</th>
+                          <th className="px-3 py-2 font-bold text-gray-600 border-b border-gray-150">Specialization</th>
+                          <th className="px-3 py-2 font-bold text-gray-600 border-b border-gray-150 text-center">Duration</th>
+                          <th className="px-3 py-2 font-bold text-gray-600 border-b border-gray-150 text-right">Total Fee</th>
+                          <th className="px-3 py-2 font-bold text-gray-600 border-b border-gray-150 text-right">Year Fee</th>
+                          <th className="px-3 py-2 font-bold text-gray-600 border-b border-gray-150 text-right">Sem Fee</th>
+                          <th className="px-3 py-2 font-bold text-gray-600 border-b border-gray-150 text-center">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {courses.length === 0 ? (
+                          <tr>
+                            <td colSpan={7} className="px-3 py-6 text-center text-gray-400 italic">
+                              No courses added to this university yet.
+                            </td>
+                          </tr>
+                        ) : (
+                          courses.map((course, index) => (
+                            <tr key={index} className="hover:bg-gray-50/50 transition-colors">
+                              <td className="px-3 py-2 font-bold text-gray-800">{course.name}</td>
+                              <td className="px-3 py-2 text-gray-500">{course.specialization || 'N/A'}</td>
+                              <td className="px-3 py-2 text-center text-gray-600 font-medium">{course.duration} Yrs</td>
+                              <td className="px-3 py-2 text-right text-gray-800 font-semibold">₹{course.totalFee.toLocaleString('en-IN')}</td>
+                              <td className="px-3 py-2 text-right text-gray-600 font-medium">₹{course.yearFee.toLocaleString('en-IN')}</td>
+                              <td className="px-3 py-2 text-right text-gray-600 font-medium">₹{course.semesterFee.toLocaleString('en-IN')}</td>
+                              <td className="px-3 py-2 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveCourse(index)}
+                                  className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                                  title="Remove Course"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
