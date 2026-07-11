@@ -52,6 +52,11 @@ export default function Sidebar({ role }: SidebarProps) {
       { name: "Counselors", href: "/admin/counselors", icon: Users },
       { name: "Universities", href: "/admin/universities", icon: GraduationCap } 
     ] : []),
+
+    // 🔥 Counselor Only Tabs
+    ...(role === "COUNSELOR" ? [
+      { name: "Students", href: "/counselor/students", icon: GraduationCap }
+    ] : []),
     
     // Common Tabs (Dono ko dikhenge)
     { name: "Leads", href: "#", icon: Users },

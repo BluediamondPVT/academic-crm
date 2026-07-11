@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
+
   // Cookies se data nikalna
   const token = request.cookies.get('authToken')?.value;
   const userRole = request.cookies.get('userRole')?.value;
@@ -25,12 +25,12 @@ export function proxy(request: NextRequest) {
   if (token) {
     // Agar Counselor Admin ke page pe jaane ki koshish kare
     if (pathname.startsWith('/admin') && userRole !== 'ADMIN') {
-      return NextResponse.redirect(new URL('/counselor', request.url)); 
+      return NextResponse.redirect(new URL('/counselor', request.url));
     }
-    
+
     // Agar Admin Counselor ke page pe aaye
     if (pathname.startsWith('/counselor') && userRole === 'ADMIN') {
-      return NextResponse.redirect(new URL('/admin', request.url)); 
+      return NextResponse.redirect(new URL('/admin', request.url));
     }
   }
 
