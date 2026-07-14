@@ -47,7 +47,7 @@ const StudentSchema: Schema = new Schema(
   { timestamps: true }
 );
 
-StudentSchema.pre('save', function (this: any, next) {
+StudentSchema.pre('save', function (this: any, next: any) {
   if (this.isModified('remark') && this.remark && typeof this.remark === 'string' && this.remark.trim() !== '') {
     this.remarkUpdatedAt = new Date();
   }
