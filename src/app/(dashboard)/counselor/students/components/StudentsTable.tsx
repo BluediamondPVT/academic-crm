@@ -1,19 +1,40 @@
 'use client';
 
 import React from 'react';
-import { Loader2, User, Phone, Building, Eye,Mail } from 'lucide-react';
+import { Loader2, User, Phone, Building, Eye, Mail, Edit } from 'lucide-react';
 import { StudentRecord } from '../types';
 
 interface StudentsTableProps {
   students: StudentRecord[];
   loading: boolean;
   onSelectStudent: (student: StudentRecord) => void;
+  onEditStudent: (student: StudentRecord) => void;
 }
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'Active On Call':
+      return 'bg-blue-50 text-blue-700 border border-blue-100';
+    case 'Visit':
+      return 'bg-purple-50 text-purple-700 border border-purple-100';
+    case 'Online Counseling':
+      return 'bg-cyan-50 text-cyan-700 border border-cyan-100';
+    case 'Hold':
+      return 'bg-amber-50 text-amber-700 border border-amber-100';
+    case 'Lost':
+      return 'bg-red-50 text-red-700 border border-red-100';
+    case 'Admission':
+      return 'bg-emerald-50 text-emerald-700 border border-emerald-100';
+    default:
+      return 'bg-gray-50 text-gray-700 border border-gray-100';
+  }
+};
 
 export default function StudentsTable({
   students,
   loading,
   onSelectStudent,
+  onEditStudent,
 }: StudentsTableProps) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -37,20 +58,21 @@ export default function StudentsTable({
               <th className="px-2 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
                 Number
               </th>
-              <th className="px-2 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
+              {/* <th className="px-2 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
                 Email 
-              </th>
+              </th> */}
               <th className="px-2 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
                 City
               </th>
               <th className="px-2 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
-                Enrolled Course
+                 Course
               </th>
-              <th className="px-2 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
-                Fee / Duration
-              </th>
+          
               <th className="px-2 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
                 Status
+              </th>
+                  <th className="px-2 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
+                Remark
               </th>
               <th className="px-2 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100 text-right">
                 Actions
@@ -91,12 +113,7 @@ export default function StudentsTable({
                       {student.phoneNumber}
                     </div>
                   </td>
-                  <td className="px-2 py-4">
-                    <div className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-800 bg-gray-100 px-2.5 py-1 rounded-lg">
-                      <Mail className="h-3.5 w-3.5 text-gray-500" />
-                      {student.email}
-                    </div>
-                  </td>
+                
                   <td className="px-2 py-4">
                     <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-lg">
                       <Building className="h-3.5 w-3.5 text-indigo-600" />
@@ -107,26 +124,46 @@ export default function StudentsTable({
                     <div className="text-xs font-bold text-[#112a46]">{student.courseName}</div>
                   
                   </td>
-                  <td className="px-2 py-4 text-xs text-gray-600">
+                  {/* <td className="px-2 py-4 text-xs text-gray-600">
                     <div>
                       {student.totalFee ? `₹${student.totalFee.toLocaleString()}` : 'N/A'}
                     </div>
                     {student.duration && (
                       <div className="text-xs text-gray-400">{student.duration} Years</div>
                     )}
-                  </td>
+                  </td> */}
                   <td className="px-2 py-4">
                     <span
-                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
-                        student.status === 'Enrolled'
-                          ? 'bg-green-100 text-green-700'
-                          : student.status === 'Completed'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-amber-100 text-amber-700'
-                      }`}
+                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusColor(
+                        student.status
+                      )}`}
                     >
                       {student.status}
-                    </span>
+                    </span> 
+                  </td>
+                  <td className="px-2 py-4">
+                    <div className="flex flex-col gap-1 min-w-[300px] max-w-[440px]">
+                      {student.remarkUpdatedAt && student.remark && (
+                        <span className="text-[10px] font-semibold text-gray-400">
+                          {new Date(student.remarkUpdatedAt).toLocaleDateString('en-IN', {
+                            day: '2-digit',
+                            month: 'short', 
+                            year: 'numeric',
+                          })}{' '}
+                          {new Date(student.remarkUpdatedAt).toLocaleTimeString('en-IN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                      )}
+                      {student.remark ? (
+                        <div className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-800 bg-gray-100 px-2.5 py-1 rounded-lg">
+                          {student.remark}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-400 italic">No remark</span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-2 py-4 text-right">
                     <div className="flex items-center justify-end gap-1.5">
@@ -136,6 +173,13 @@ export default function StudentsTable({
                         title="View Student Details"
                       >
                         <Eye className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => onEditStudent(student)}
+                        className="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                        title="Edit Student & Remark"
+                      >
+                        <Edit className="h-4 w-4" />
                       </button>
                     </div>
                   </td>

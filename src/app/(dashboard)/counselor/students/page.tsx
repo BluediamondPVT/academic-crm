@@ -8,6 +8,7 @@ import StudentFilters from './components/StudentFilters';
 import StudentsTable from './components/StudentsTable';
 import AddStudentModal from './components/AddStudentModal';
 import ViewStudentModal from './components/ViewStudentModal';
+import EditStudentModal from './components/EditStudentModal';
 
 export default function CounselorStudentsPage() {
   const [students, setStudents] = useState<StudentRecord[]>([]);
@@ -15,6 +16,7 @@ export default function CounselorStudentsPage() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedStudentToView, setSelectedStudentToView] = useState<StudentRecord | null>(null);
+  const [selectedStudentToEdit, setSelectedStudentToEdit] = useState<StudentRecord | null>(null);
 
   // Search & Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -102,6 +104,7 @@ export default function CounselorStudentsPage() {
         students={filteredStudents}
         loading={loading}
         onSelectStudent={setSelectedStudentToView}
+        onEditStudent={setSelectedStudentToEdit}
       />
 
       {/* Add Student Modal Form */}
@@ -116,6 +119,13 @@ export default function CounselorStudentsPage() {
       <ViewStudentModal
         student={selectedStudentToView}
         onClose={() => setSelectedStudentToView(null)}
+      />
+
+      {/* Edit Student Details & Remark Modal */}
+      <EditStudentModal
+        student={selectedStudentToEdit}
+        onClose={() => setSelectedStudentToEdit(null)}
+        onSuccess={fetchData}
       />
     </div>
   );

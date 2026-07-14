@@ -1,4 +1,5 @@
 export interface Course {
+  remark: any;
   name: string;
   specialization?: string;
   duration: number;
@@ -21,6 +22,8 @@ export interface StudentRecord {
   name: string;
   phoneNumber: string;
   email?: string;
+  remark?: string;
+  remarkUpdatedAt?: string;
   universityId: string;
   universityName: string;
   courseName: string;

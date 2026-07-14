@@ -40,6 +40,24 @@ export async function PUT(
     }
 
     const body = await req.json();
+
+    // Check if remark is being updated and set timestamp
+    if (body.remark !== undefined) {
+      const existingStudent = await Student.findById(id);
+      if (!existingStudent) {
+        return NextResponse.json({ error: 'Student not found' }, { status: 404 });
+      }
+      const oldRemark = (existingStudent.remark || '').trim();
+      const newRemark = (body.remark || '').trim();
+      if (oldRemark !== newRemark) {
+        if (newRemark === '') {
+          body.remarkUpdatedAt = null;
+        } else {
+          body.remarkUpdatedAt = new Date();
+        }
+      }
+    }
+
     const updatedStudent = await Student.findByIdAndUpdate(
       id,
       body,

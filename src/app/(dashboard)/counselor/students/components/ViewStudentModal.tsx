@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { User, Phone, Building, X } from 'lucide-react';
+import { User, Phone, Building, X, Mail, MapPin, Calendar, MessageSquare } from 'lucide-react';
 import { StudentRecord } from '../types';
 
 interface ViewStudentModalProps {
@@ -43,10 +43,13 @@ export default function ViewStudentModal({ student, onClose }: ViewStudentModalP
             <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
               Personal Information
             </h4>
-            <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <div>
                 <span className="text-xs text-gray-400 block font-medium">Student Name</span>
-                <span className="text-sm font-bold text-[#112a46]">{student.name}</span>
+                <span className="text-sm font-bold text-[#112a46] flex items-center gap-1.5 mt-0.5">
+                  <User className="h-3.5 w-3.5 text-gray-400" />
+                  {student.name}
+                </span>
               </div>
               <div>
                 <span className="text-xs text-gray-400 block font-medium">Phone Number</span>
@@ -56,8 +59,23 @@ export default function ViewStudentModal({ student, onClose }: ViewStudentModalP
                 </span>
               </div>
               <div>
+                <span className="text-xs text-gray-400 block font-medium">Email Address</span>
+                <span className="text-sm font-semibold text-gray-700 flex items-center gap-1.5 mt-0.5">
+                  <Mail className="h-3.5 w-3.5 text-gray-400" />
+                  {student.email || 'N/A'}
+                </span>
+              </div>
+              <div>
+                <span className="text-xs text-gray-400 block font-medium">City</span>
+                <span className="text-sm font-semibold text-gray-700 flex items-center gap-1.5 mt-0.5">
+                  <MapPin className="h-3.5 w-3.5 text-gray-400" />
+                  {student.city}
+                </span>
+              </div>
+              <div>
                 <span className="text-xs text-gray-400 block font-medium">Enrollment Date</span>
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-gray-700 flex items-center gap-1.5 mt-0.5">
+                  <Calendar className="h-3.5 w-3.5 text-gray-400" />
                   {student.createdAt
                     ? new Date(student.createdAt).toLocaleDateString('en-IN', {
                         day: 'numeric',
@@ -69,9 +87,58 @@ export default function ViewStudentModal({ student, onClose }: ViewStudentModalP
               </div>
               <div>
                 <span className="text-xs text-gray-400 block font-medium">Status</span>
-                <span className="inline-block mt-0.5 px-2.5 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-bold">
-                  {student.status || 'Enrolled'}
+                <span
+                  className={`inline-flex items-center mt-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                    student.status === 'Enrolled'
+                      ? 'bg-green-100 text-green-700'
+                      : student.status === 'Completed'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-amber-100 text-amber-700'
+                  }`}
+                >
+                  {student.status || 'Active On Call'}
                 </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Remarks Section */}
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
+              Counselor Remarks
+            </h4>
+            <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg shrink-0 mt-0.5">
+                  <MessageSquare className="h-4 w-4" />
+                </div>
+                <div className="space-y-1 w-full">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-gray-500">Last Remark Change:</span>
+                    {student.remarkUpdatedAt ? (
+                      <span className="text-[10px] bg-gray-200/60 text-gray-600 px-2 py-0.5 rounded font-semibold">
+                        {new Date(student.remarkUpdatedAt).toLocaleDateString('en-IN', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        })}{' '}
+                        {new Date(student.remarkUpdatedAt).toLocaleTimeString('en-IN', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-gray-400 italic">No date recorded</span>
+                    )}
+                  </div>
+                  <div className="text-sm font-medium text-gray-800 bg-white border border-gray-100 rounded-lg p-3 mt-1.5 shadow-sm max-w-2xl leading-relaxed whitespace-pre-wrap">
+                    {student.remark ? (
+                      student.remark
+                    ) : (
+                      <span className="text-gray-400 italic">No remark provided yet. Use the Edit option to update.</span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

@@ -13,6 +13,7 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle,
+  MessageCircle,
 } from 'lucide-react';
 import { University } from '../types';
 
@@ -33,6 +34,7 @@ export default function AddStudentModal({
     name: '',
     phoneNumber: '',
     email:'',
+    remark:'',
     universityId: '',
     courseIndex: '',
     city: '',
@@ -89,6 +91,7 @@ export default function AddStudentModal({
         name: formData.name.trim(),
         phoneNumber: formData.phoneNumber.trim(),
         email: formData.email,
+        remark: formData.remark,
         universityId: selectedUniversity._id,
         universityName: selectedUniversity.name,
         city: formData.city,
@@ -123,6 +126,7 @@ export default function AddStudentModal({
           name: '',
           phoneNumber: '',
           email:'',
+          remark:'',
           universityId: '',
           courseIndex: '',
           city: '',
@@ -352,6 +356,10 @@ export default function AddStudentModal({
                         <span className="text-gray-500 block">Semester Fee</span>
                         <span className="font-bold text-gray-800">₹{selectedCourse.semesterFee?.toLocaleString()}</span>
                       </div>
+                      <div>
+                        <span className="text-gray-500 block">Remark</span>
+                        <span className="font-bold text-gray-800">{selectedCourse.remark?.toLocaleString()}</span>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -377,6 +385,23 @@ export default function AddStudentModal({
                 <option value="Admission">Admission</option>
               </select>
             </div>
+
+             <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                    Remark
+                  </label>
+                  <div className="relative">
+                    <MessageCircle className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      name="remark"
+                      value={formData.remark}
+                      onChange={handleInputChange}
+                      placeholder="Student update "
+                      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                      type="text"
+                    />
+                  </div>
+                </div>
 
             {/* Footer Buttons */}
             <div className="pt-4 border-t border-gray-100 flex items-center justify-end gap-3">

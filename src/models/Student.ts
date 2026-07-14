@@ -4,6 +4,8 @@ export interface IStudent extends Document {
   name: string;
   phoneNumber: string;
   email?: string;
+  remark?:string;
+  remarkUpdatedAt?: Date;
   universityId: string;
   universityName: string;
   courseName: string;
@@ -24,6 +26,8 @@ const StudentSchema: Schema = new Schema(
     name: { type: String, required: true },
     phoneNumber: { type: String, required: true },
     email:{type:String},
+    remark:{type:String},
+    remarkUpdatedAt: { type: Date },
     universityId: { type: String, required: true },
     universityName: { type: String, required: true },
     courseName: { type: String, required: true },
@@ -42,6 +46,13 @@ const StudentSchema: Schema = new Schema(
   },
   { timestamps: true }
 );
+
+StudentSchema.pre('save', function (next) {
+  if (this.isModified('remark') && this.remark && this.remark.trim() !== '') {
+    this.remarkUpdatedAt = new Date();
+  }
+  next();
+});
 
 if (mongoose.models.Student) {
   delete mongoose.models.Student;
