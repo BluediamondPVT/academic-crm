@@ -24,6 +24,7 @@ export async function POST(req: Request) {
     const {
       name,
       phoneNumber,
+      email,
       universityId,
       universityName,
       courseName,
@@ -34,10 +35,11 @@ export async function POST(req: Request) {
       semesterFee,
       status,
       counselorName,
+      city,
     } = body;
 
     // Validate required fields
-    if (!name || !phoneNumber || !universityId || !universityName || !courseName) {
+    if (!name || !phoneNumber || !universityId || !universityName || !courseName || !city) {
       return NextResponse.json(
         { error: 'Name, Phone Number, University, and Course are required fields.' },
         { status: 400 }
@@ -47,6 +49,7 @@ export async function POST(req: Request) {
     const newStudent = await Student.create({
       name,
       phoneNumber,
+      email,
       universityId,
       universityName,
       courseName,
@@ -55,8 +58,9 @@ export async function POST(req: Request) {
       totalFee,
       yearFee,
       semesterFee,
-      status: status || 'Enrolled',
+      status: status || 'Active On Call',
       counselorName,
+      city,
     });
 
     return NextResponse.json(
