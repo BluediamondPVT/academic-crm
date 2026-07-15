@@ -52,6 +52,7 @@ export async function POST(req: Request) {
       phoneNumber,
       email,
       remark,
+      remarkHistory: remark && remark.trim() !== '' ? [{ remark: remark.trim(), updatedAt: new Date(), status: status || 'Active On Call' }] : [],
       universityId,
       universityName,
       courseName,

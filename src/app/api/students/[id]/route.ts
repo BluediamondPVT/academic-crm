@@ -54,6 +54,22 @@ export async function PUT(
           body.remarkUpdatedAt = null;
         } else {
           body.remarkUpdatedAt = new Date();
+          
+          const currentStatus = body.status || existingStudent.status || 'Active On Call';
+          const history = [...(existingStudent.remarkHistory || [])];
+          if (history.length === 0 && oldRemark !== '') {
+            history.push({
+              remark: oldRemark,
+              updatedAt: existingStudent.remarkUpdatedAt || existingStudent.updatedAt || new Date(),
+              status: existingStudent.status || 'Active On Call'
+            });
+          }
+          history.push({
+            remark: newRemark,
+            updatedAt: new Date(),
+            status: currentStatus
+          });
+          body.remarkHistory = history;
         }
       }
     }

@@ -28,8 +28,8 @@ export function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL('/counselor', request.url));
     }
 
-    // Agar Admin Counselor ke page pe aaye
-    if (pathname.startsWith('/counselor') && userRole === 'ADMIN') {
+    // Agar Admin Counselor ke page pe aaye (allow shared leads pages)
+    if (pathname.startsWith('/counselor') && !pathname.startsWith('/counselor/leads') && userRole === 'ADMIN') {
       return NextResponse.redirect(new URL('/admin', request.url));
     }
   }

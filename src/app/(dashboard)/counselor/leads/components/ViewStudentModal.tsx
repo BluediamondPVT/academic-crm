@@ -104,42 +104,97 @@ export default function ViewStudentModal({ student, onClose }: ViewStudentModalP
 
           {/* Remarks Section */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
-              Counselor Remarks
+            <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3 flex items-center justify-between">
+              <span>Counselor Remarks &amp; History</span>
+              {student.remarkHistory && student.remarkHistory.length > 0 && (
+                <span className="text-[10px] bg-slate-100 text-slate-650 px-2 py-0.5 rounded-full font-bold">
+                  {student.remarkHistory.length} log{student.remarkHistory.length > 1 ? 's' : ''}
+                </span>
+              )}
             </h4>
             <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg shrink-0 mt-0.5">
-                  <MessageSquare className="h-4 w-4" />
+              {student.remarkHistory && student.remarkHistory.length > 0 ? (
+                <div className="space-y-4 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-[2px] before:bg-gray-205">
+                  {/* Map through history in reverse (newest first) */}
+                  {[...student.remarkHistory].reverse().map((hist, idx) => (
+                    <div key={idx} className="flex gap-3 relative">
+                      {/* Timeline dot */}
+                      <div className="h-6 w-6 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center shrink-0 z-10">
+                        <MessageSquare className="h-3 w-3 text-indigo-600" />
+                      </div>
+                      <div className="space-y-1 w-full pt-0.5">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[10px] bg-gray-200/60 text-gray-600 px-2 py-0.5 rounded font-semibold">
+                            {new Date(hist.updatedAt).toLocaleDateString('en-IN', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                            })}{' '}
+                            {new Date(hist.updatedAt).toLocaleTimeString('en-IN', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                          {hist.status && (
+                            <span className={`text-[9px] px-2 py-0.5 rounded font-bold border ${
+                              hist.status === 'Admission'
+                                ? 'bg-green-50 text-green-700 border-green-100'
+                                : hist.status === 'Lost'
+                                ? 'bg-red-50 text-red-700 border-red-100'
+                                : hist.status === 'Hold'
+                                ? 'bg-amber-50 text-amber-700 border-amber-100'
+                                : 'bg-blue-50 text-blue-700 border-blue-100'
+                            }`}>
+                              {hist.status}
+                            </span>
+                          )}
+                          {idx === 0 && (
+                            <span className="text-[9px] bg-green-50 text-green-700 px-1.5 py-0.5 rounded font-bold border border-green-100">
+                              Latest
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-sm font-medium text-gray-800 bg-white border border-gray-100 rounded-lg p-3 mt-1 shadow-sm leading-relaxed whitespace-pre-wrap">
+                          {hist.remark}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="space-y-1 w-full">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-gray-500">Last Remark Change:</span>
-                    {student.remarkUpdatedAt ? (
-                      <span className="text-[10px] bg-gray-200/60 text-gray-600 px-2 py-0.5 rounded font-semibold">
-                        {new Date(student.remarkUpdatedAt).toLocaleDateString('en-IN', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric',
-                        })}{' '}
-                        {new Date(student.remarkUpdatedAt).toLocaleTimeString('en-IN', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </span>
-                    ) : (
-                      <span className="text-[10px] text-gray-400 italic">No date recorded</span>
-                    )}
+              ) : (
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-blue-50 text-blue-600 rounded-lg shrink-0 mt-0.5">
+                    <MessageSquare className="h-4 w-4" />
                   </div>
-                  <div className="text-sm font-medium text-gray-800 bg-white border border-gray-100 rounded-lg p-3 mt-1.5 shadow-sm max-w-2xl leading-relaxed whitespace-pre-wrap">
-                    {student.remark ? (
-                      student.remark
-                    ) : (
-                      <span className="text-gray-400 italic">No remark provided yet. Use the Edit option to update.</span>
-                    )}
+                  <div className="space-y-1 w-full">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-gray-500">Last Remark Change:</span>
+                      {student.remarkUpdatedAt ? (
+                        <span className="text-[10px] bg-gray-200/60 text-gray-600 px-2 py-0.5 rounded font-semibold">
+                          {new Date(student.remarkUpdatedAt).toLocaleDateString('en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          })}{' '}
+                          {new Date(student.remarkUpdatedAt).toLocaleTimeString('en-IN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            })}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-gray-400 italic">No date recorded</span>
+                      )}
+                    </div>
+                    <div className="text-sm font-medium text-gray-800 bg-white border border-gray-100 rounded-lg p-3 mt-1.5 shadow-sm max-w-2xl leading-relaxed whitespace-pre-wrap">
+                      {student.remark ? (
+                        student.remark
+                      ) : (
+                        <span className="text-gray-400 italic">No remark provided yet. Use the Edit option to update.</span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 

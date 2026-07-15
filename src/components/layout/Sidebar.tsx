@@ -50,16 +50,17 @@ export default function Sidebar({ role }: SidebarProps) {
     // 🔥 Admin Only Tabs (Counselors aur Universities dono yahan aayenge)
     ...(role === "ADMIN" ? [
       { name: "Counselors", href: "/admin/counselors", icon: Users },
-      { name: "Universities", href: "/admin/universities", icon: GraduationCap } 
+      { name: "Universities", href: "/admin/universities", icon: GraduationCap },
+      { name: "Leads", href: "/admin/students", icon: GraduationCap }
     ] : []),
 
     // 🔥 Counselor Only Tabs
     ...(role === "COUNSELOR" ? [
-      { name: "Students", href: "/counselor/students", icon: GraduationCap }
+      { name: "Leads", href: "/counselor/leads", icon: GraduationCap }
     ] : []),
     
     // Common Tabs (Dono ko dikhenge)
-    { name: "Leads", href: "#", icon: Users },
+    { name: "Student", href: "#", icon: Users },
     { name: "Settings", href: "#", icon: Settings },
   ];
 

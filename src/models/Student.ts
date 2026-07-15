@@ -1,11 +1,18 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
+export interface IRemarkHistory {
+  remark: string;
+  updatedAt: Date;
+  status?: string;
+}
+
 export interface IStudent extends Document {
   name: string;
   phoneNumber: string;
   email?: string;
   remark?:string;
   remarkUpdatedAt?: Date;
+  remarkHistory?: IRemarkHistory[];
   universityId: string;
   universityName: string;
   courseName: string;
@@ -28,6 +35,13 @@ const StudentSchema: Schema = new Schema(
     email:{type:String},
     remark:{type:String},
     remarkUpdatedAt: { type: Date },
+    remarkHistory: [
+      {
+        remark: { type: String },
+        updatedAt: { type: Date, default: Date.now },
+        status: { type: String }
+      }
+    ],
     universityId: { type: String, required: true },
     universityName: { type: String, required: true },
     courseName: { type: String, required: true },
@@ -47,11 +61,10 @@ const StudentSchema: Schema = new Schema(
   { timestamps: true }
 );
 
-StudentSchema.pre('save', function (this: any, next: any) {
+StudentSchema.pre('save', function (this: any) {
   if (this.isModified('remark') && this.remark && typeof this.remark === 'string' && this.remark.trim() !== '') {
     this.remarkUpdatedAt = new Date();
   }
-  next();
 });
 
 if (mongoose.models.Student) {

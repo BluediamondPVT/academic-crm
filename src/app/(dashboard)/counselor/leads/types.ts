@@ -17,6 +17,12 @@ export interface University {
   courses: Course[];
 }
 
+export interface RemarkHistoryEntry {
+  remark: string;
+  updatedAt: string;
+  status?: string;
+}
+
 export interface StudentRecord {
   _id: string;
   name: string;
@@ -24,6 +30,7 @@ export interface StudentRecord {
   email?: string;
   remark?: string;
   remarkUpdatedAt?: string;
+  remarkHistory?: RemarkHistoryEntry[];
   universityId: string;
   universityName: string;
   courseName: string;
