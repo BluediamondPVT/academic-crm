@@ -52,7 +52,8 @@ export default function Sidebar({ role }: SidebarProps) {
     ...(role === "ADMIN" ? [
       { name: "Counselors", href: "/admin/counselors", icon: Users },
       { name: "Universities", href: "/admin/universities", icon: GraduationCap },
-      { name: "Leads", href: "/admin/students", icon: Headset }
+      { name: "Leads", href: "/admin/students", icon: Headset },
+      { name: "Admission", href: "/admissions", icon: Users }
     ] : []),
 
     // 🔥 Counselor Only Tabs
@@ -61,7 +62,6 @@ export default function Sidebar({ role }: SidebarProps) {
     ] : []),
     
     // Common Tabs (Dono ko dikhenge)
-    { name: "Admission", href: "#", icon: Users },
     { name: "Settings", href: "#", icon: Settings },
   ];
 

@@ -117,22 +117,13 @@ export default function StudentStats({
       activeClass: 'border-red-500 ring-2 ring-red-500/15 bg-white/90 shadow-lg -translate-y-1',
       inactiveClass: 'border-red-100 hover:border-red-400 hover:-translate-y-1 hover:shadow-md hover:bg-white/80',
     },
-    ...(isAdmin ? [{ 
+    { 
       name: 'Admission', 
       count: students.filter(s => s.status === 'Admission').length, 
       icon: CheckCircle2, 
       color: 'text-emerald-600', 
       bg: 'bg-emerald-50/80 backdrop-blur-xs', 
       activeClass: 'border-emerald-500 ring-2 ring-emerald-500/15 bg-white/90 shadow-lg -translate-y-1',
-      inactiveClass: 'border-emerald-100 hover:border-emerald-400 hover:-translate-y-1 hover:shadow-md hover:bg-white/80',
-    }] : []),
-    { 
-      name: 'Active Universities', 
-      count: universities.length, 
-      icon: Building, 
-      color: 'text-emerald-600', 
-      bg: 'bg-emerald-50/80 backdrop-blur-xs', 
-      activeClass: '', // Non-filterable
       inactiveClass: 'border-emerald-100 hover:border-emerald-400 hover:-translate-y-1 hover:shadow-md hover:bg-white/80',
     },
   ];
@@ -142,7 +133,7 @@ export default function StudentStats({
       {/* Glassmorphic Unified Grid - 5 columns on desktop */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
         {stats.map(item => {
-          const isClickable = item.name !== 'Active Universities';
+          const isClickable = item.name !== 'Admission' || isAdmin;
           const isActive = item.name === 'Total Enquiries'
             ? activeStatus === 'ALL'
             : activeStatus === item.name;

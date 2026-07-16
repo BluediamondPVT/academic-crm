@@ -52,6 +52,11 @@ export default function CounselorStudentsPage() {
 
   // Filter students based on search, university dropdown, and stats click status
   const filteredStudents = students.filter(student => {
+    // Counselors should not see Admission records in the table/search results
+    if (!isAdmin && student.status === 'Admission') {
+      return false;
+    }
+
     const matchesSearch =
       student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.phoneNumber.includes(searchTerm) ||
