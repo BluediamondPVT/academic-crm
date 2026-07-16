@@ -76,7 +76,7 @@ export default function CreateCounselorPage() {
             {error && (
               <div className="rounded-lg bg-red-50 dark:bg-red-900/20 p-4 border border-red-200 dark:border-red-900/50">
                 <div className="flex">
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     <AlertCircle className="h-5 w-5 text-red-400 dark:text-red-500" aria-hidden="true" />
                   </div>
                   <div className="ml-3">
@@ -89,7 +89,7 @@ export default function CreateCounselorPage() {
             {success && (
               <div className="rounded-lg bg-green-50 dark:bg-green-900/20 p-4 border border-green-200 dark:border-green-900/50">
                 <div className="flex">
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     <CheckCircle2 className="h-5 w-5 text-green-400 dark:text-green-500" aria-hidden="true" />
                   </div>
                   <div className="ml-3">

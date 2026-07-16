@@ -146,7 +146,7 @@ export default function StudentsTable({
                         </span>
                       )}
                       {student.remark ? (
-                        <div className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-800 bg-gray-100 px-2.5 py-1 rounded-lg break-words">
+                        <div className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-800 bg-gray-100 px-2.5 py-1 rounded-lg wrap-break-word">
                           {student.remark}
                         </div>
                       ) : (

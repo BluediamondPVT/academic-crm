@@ -12,6 +12,7 @@ import {
   ChevronRight,
   X,
   GraduationCap,
+  Headset,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -51,16 +52,16 @@ export default function Sidebar({ role }: SidebarProps) {
     ...(role === "ADMIN" ? [
       { name: "Counselors", href: "/admin/counselors", icon: Users },
       { name: "Universities", href: "/admin/universities", icon: GraduationCap },
-      { name: "Leads", href: "/admin/students", icon: GraduationCap }
+      { name: "Leads", href: "/admin/students", icon: Headset }
     ] : []),
 
     // 🔥 Counselor Only Tabs
     ...(role === "COUNSELOR" ? [
-      { name: "Leads", href: "/counselor/leads", icon: GraduationCap }
+      { name: "Leads", href: "/counselor/leads", icon: Headset }
     ] : []),
     
     // Common Tabs (Dono ko dikhenge)
-    { name: "Student", href: "#", icon: Users },
+    { name: "Admission", href: "#", icon: Users },
     { name: "Settings", href: "#", icon: Settings },
   ];
 
@@ -69,7 +70,7 @@ export default function Sidebar({ role }: SidebarProps) {
       {/* Top Logo / Branding */}
       <div className="flex items-center justify-between h-16 px-6 border-b border-slate-800/80">
         <div className="flex items-center space-x-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white font-bold shadow-md shadow-indigo-500/20 text-sm flex-shrink-0">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white font-bold shadow-md shadow-indigo-500/20 text-sm shrink-0">
             A
           </div>
           {(!isCollapsed || isMobileOpen) && (

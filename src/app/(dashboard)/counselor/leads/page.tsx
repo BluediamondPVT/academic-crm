@@ -19,6 +19,7 @@ export default function CounselorStudentsPage() {
   // Search & Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [filterUniversity, setFilterUniversity] = useState('ALL');
+  const [filterStatus, setFilterStatus] = useState('ALL');
 
   useEffect(() => {
     setIsAdmin(document.cookie.includes('userRole=ADMIN'));
@@ -49,7 +50,7 @@ export default function CounselorStudentsPage() {
     }
   };
 
-  // Filter students based on search and university dropdown
+  // Filter students based on search, university dropdown, and stats click status
   const filteredStudents = students.filter(student => {
     const matchesSearch =
       student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -61,7 +62,10 @@ export default function CounselorStudentsPage() {
     const matchesUniversity =
       filterUniversity === 'ALL' || student.universityId === filterUniversity;
 
-    return matchesSearch && matchesUniversity;
+    const matchesStatus =
+      filterStatus === 'ALL' || (student.status || 'New Lead') === filterStatus;
+
+    return matchesSearch && matchesUniversity && matchesStatus;
   });
 
   const handleSelectStudent = (student: StudentRecord) => {
@@ -115,7 +119,21 @@ export default function CounselorStudentsPage() {
       </div>
 
       {/* Overview Stats */}
-      <StudentStats students={students} universities={universities} />
+      <StudentStats 
+        students={students} 
+        universities={universities} 
+        activeStatus={filterStatus}
+        isAdmin={isAdmin}
+        onStatusClick={(statusName) => {
+          if (statusName === 'Total Enquiries') {
+            setFilterStatus('ALL');
+          } else if (statusName === 'Active Universities') {
+            // No action/filter reset
+          } else {
+            setFilterStatus(prev => prev === statusName ? 'ALL' : statusName);
+          }
+        }}
+      />
 
       {/* Filter & Search Controls */}
       <StudentFilters

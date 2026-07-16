@@ -100,7 +100,7 @@ export default function ViewLeadPage({ params }: ViewLeadPageProps) {
               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
                 student.status === 'Admission'
                   ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                  : student.status === 'Lost' || student.status === 'Rejected'
+                  : student.status === 'Lost'
                   ? 'bg-red-50 text-red-700 border border-red-100'
                   : student.status === 'Hold' || student.status === 'Follow-Up'
                   ? 'bg-amber-50 text-amber-700 border border-amber-100'
@@ -197,7 +197,7 @@ export default function ViewLeadPage({ params }: ViewLeadPageProps) {
                 <div className={`p-2 rounded-lg ${
                   student.status === 'Admission'
                     ? 'bg-green-50 text-green-600'
-                    : student.status === 'Lost' || student.status === 'Rejected'
+                    : student.status === 'Lost'
                     ? 'bg-red-50 text-red-600'
                     : student.status === 'Hold' || student.status === 'Follow-Up'
                     ? 'bg-amber-50 text-amber-600'
@@ -253,7 +253,7 @@ export default function ViewLeadPage({ params }: ViewLeadPageProps) {
                             <span className={`text-[9px] px-2 py-0.5 rounded font-bold border ${
                               hist.status === 'Admission'
                                 ? 'bg-green-50 text-green-700 border-green-100'
-                                : hist.status === 'Lost' || hist.status === 'Rejected'
+                                : hist.status === 'Lost'
                                 ? 'bg-red-50 text-red-700 border-red-100'
                                 : hist.status === 'Hold' || hist.status === 'Follow-Up'
                                 ? 'bg-amber-50 text-amber-700 border-amber-100'
@@ -301,7 +301,7 @@ export default function ViewLeadPage({ params }: ViewLeadPageProps) {
               Academic Details
             </h3>
             
-            <div className="bg-gradient-to-br from-indigo-50/40 via-blue-50/30 to-sky-50/20 border border-indigo-100/60 rounded-xl p-4 space-y-4">
+            <div className="bg-linear-to-br from-indigo-50/40 via-blue-50/30 to-sky-50/20 border border-indigo-100/60 rounded-xl p-4 space-y-4">
               <div>
                 <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-500 block">University</span>
                 <span className="text-sm font-black text-indigo-950 block mt-0.5">

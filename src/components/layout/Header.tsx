@@ -53,7 +53,7 @@ export default function Header({ role, userName }: HeaderProps) {
       <div className="flex items-center gap-4 ml-auto">
         {/* User Card */}
         <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
-          <div className="flex flex-col items-end hidden sm:flex">
+          <div className="flex flex-col items-end sm:flex">
             <span className="text-sm font-semibold text-slate-800">{displayName || "User"}</span>
             <span className="text-xs text-slate-400 capitalize">{role.toLowerCase()}</span>
           </div>

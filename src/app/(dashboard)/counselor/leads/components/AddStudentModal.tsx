@@ -330,7 +330,7 @@ export default function AddStudentModal({
 
                 {/* Selected Course Details Preview Card */}
                 {selectedCourse && (
-                  <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl space-y-2">
+                  <div className="p-4 bg-linear-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-indigo-900 uppercase">
                         Selected Course Details
@@ -384,7 +384,7 @@ export default function AddStudentModal({
                 <option value="Follow-Up">Follow-Up</option>
                 <option value="Processing">Processing</option>
                 <option value="Hold">Hold</option>
-                <option value="Rejected">Rejected</option>
+                
                 <option value="Lost">Lost</option>
                 <option value="Admission">Admission</option>
               </select>
@@ -395,7 +395,7 @@ export default function AddStudentModal({
                     <label className="block text-xs font-bold text-gray-700">
                       Remark
                     </label>
-                    {['Hold', 'Lost', 'Rejected', 'Follow-Up'].includes(formData.status) && (
+                    {['Hold', 'Lost', 'Follow-Up'].includes(formData.status) && (
                       <span className="text-[11px] font-medium text-amber-600">
                         Enter reason or next action date
                       </span>
@@ -408,7 +408,7 @@ export default function AddStudentModal({
                       value={formData.remark}
                       onChange={handleInputChange}
                       placeholder={
-                        ['Hold', 'Lost', 'Rejected', 'Follow-Up'].includes(formData.status)
+                        ['Hold', 'Lost', 'Follow-Up'].includes(formData.status)
                           ? 'Enter reason or next action date...'
                           : 'Student update'
                       }

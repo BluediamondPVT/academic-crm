@@ -52,7 +52,7 @@ const StudentSchema: Schema = new Schema(
     semesterFee: { type: Number },
     status: {
       type: String,
-      enum: ['New Lead', 'Active On Call', 'Visit', 'Online Counseling', 'Follow-Up', 'Processing', 'Hold', 'Rejected', 'Lost', 'Admission'],
+      enum: ['New Lead', 'Active On Call', 'Visit', 'Online Counseling', 'Follow-Up', 'Processing', 'Hold', 'Lost', 'Admission'],
       default: 'New Lead',
     },
     counselorName: { type: String },

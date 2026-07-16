@@ -203,7 +203,7 @@ export default function ViewStudentModal({ student, onClose }: ViewStudentModalP
             <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
               Allocated University &amp; Course
             </h4>
-            <div className="bg-gradient-to-r from-blue-50/60 to-indigo-50/60 border border-blue-100/80 rounded-xl p-4 space-y-3">
+            <div className="bg-linear-to-r from-blue-50/60 to-indigo-50/60 border border-blue-100/80 rounded-xl p-4 space-y-3">
               <div className="flex items-center gap-2">
                 <Building className="h-4 w-4 text-indigo-600" />
                 <div>

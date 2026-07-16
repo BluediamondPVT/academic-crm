@@ -284,7 +284,7 @@ export default function CreateLeadPage() {
                       <option value="Follow-Up">Follow-Up</option>
                       <option value="Processing">Processing</option>
                       <option value="Hold">Hold</option>
-                      <option value="Rejected">Rejected</option>
+                      
                       <option value="Lost">Lost</option>
                       <option value="Admission">Admission</option>
                     </select>
@@ -345,7 +345,7 @@ export default function CreateLeadPage() {
 
                 {/* Selected Course Details Preview Card */}
                 {selectedCourse && (
-                  <div className="p-4 bg-gradient-to-r from-slate-50 to-gray-50 border border-gray-200 rounded-xl space-y-2">
+                  <div className="p-4 bg-linear-to-r from-slate-50 to-gray-50 border border-gray-200 rounded-xl space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                         Selected Course Summary
@@ -385,7 +385,7 @@ export default function CreateLeadPage() {
                     <label className="block text-xs font-bold text-gray-700">
                       Remark / Counselor Log Notes
                     </label>
-                    {['Hold', 'Lost', 'Rejected', 'Follow-Up'].includes(formData.status) && (
+                    {['Hold', 'Lost', 'Follow-Up'].includes(formData.status) && (
                       <span className="text-[11px] font-medium text-amber-600">
                         Enter reason or next action date
                       </span>
@@ -396,7 +396,7 @@ export default function CreateLeadPage() {
                     value={formData.remark}
                     onChange={handleInputChange}
                     placeholder={
-                      ['Hold', 'Lost', 'Rejected', 'Follow-Up'].includes(formData.status)
+                      ['Hold', 'Lost', 'Follow-Up'].includes(formData.status)
                         ? 'Enter reason or next action date...'
                         : 'Enter counselor notes and initial updates here...'
                     }

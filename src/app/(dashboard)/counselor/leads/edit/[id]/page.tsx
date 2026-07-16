@@ -308,7 +308,7 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
                       <option value="Follow-Up">Follow-Up</option>
                       <option value="Processing">Processing</option>
                       <option value="Hold">Hold</option>
-                      <option value="Rejected">Rejected</option>
+                      
                       <option value="Lost">Lost</option>
                       <option value="Admission">Admission</option>
                     </select>
@@ -321,7 +321,7 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
                     <label className="block text-xs font-bold text-gray-700">
                       Remark / Counselor Log Notes
                     </label>
-                    {['Hold', 'Lost', 'Rejected', 'Follow-Up'].includes(formData.status) && (
+                    {['Hold', 'Lost', 'Follow-Up'].includes(formData.status) && (
                       <span className="text-[11px] font-medium text-amber-600">
                         Enter reason or next action date
                       </span>
@@ -332,7 +332,7 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
                     value={formData.remark}
                     onChange={handleInputChange}
                     placeholder={
-                      ['Hold', 'Lost', 'Rejected', 'Follow-Up'].includes(formData.status)
+                      ['Hold', 'Lost', 'Follow-Up'].includes(formData.status)
                         ? 'Enter reason or next action date...'
                         : 'Enter counselor notes and updates here...'
                     }
