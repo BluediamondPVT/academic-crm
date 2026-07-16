@@ -98,14 +98,16 @@ export default function ViewLeadPage({ params }: ViewLeadPageProps) {
             </h1>
             <span
               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                student.status === 'Enrolled'
+                student.status === 'Admission'
                   ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                  : student.status === 'Completed'
-                  ? 'bg-blue-50 text-blue-700 border border-blue-100'
-                  : 'bg-amber-50 text-amber-700 border border-amber-100'
+                  : student.status === 'Lost' || student.status === 'Rejected'
+                  ? 'bg-red-50 text-red-700 border border-red-100'
+                  : student.status === 'Hold' || student.status === 'Follow-Up'
+                  ? 'bg-amber-50 text-amber-700 border border-amber-100'
+                  : 'bg-blue-50 text-blue-700 border border-blue-100'
               }`}
             >
-              {student.status || 'Active On Call'}
+              {student.status || 'New Lead'}
             </span>
           </div>
           <p className="text-xs text-gray-500 font-medium mt-0.5">
@@ -195,9 +197,9 @@ export default function ViewLeadPage({ params }: ViewLeadPageProps) {
                 <div className={`p-2 rounded-lg ${
                   student.status === 'Admission'
                     ? 'bg-green-50 text-green-600'
-                    : student.status === 'Lost'
+                    : student.status === 'Lost' || student.status === 'Rejected'
                     ? 'bg-red-50 text-red-600'
-                    : student.status === 'Hold'
+                    : student.status === 'Hold' || student.status === 'Follow-Up'
                     ? 'bg-amber-50 text-amber-600'
                     : 'bg-blue-50 text-blue-600'
                 }`}>
@@ -205,7 +207,7 @@ export default function ViewLeadPage({ params }: ViewLeadPageProps) {
                 </div>
                 <div>
                   <span className="text-[10px] text-gray-400 block font-bold uppercase tracking-wider">Admission Status</span>
-                  <span className="text-sm font-semibold text-slate-700">{student.status || 'Active On Call'}</span>
+                  <span className="text-sm font-semibold text-slate-700">{student.status || 'New Lead'}</span>
                 </div>
               </div>
 
@@ -251,9 +253,9 @@ export default function ViewLeadPage({ params }: ViewLeadPageProps) {
                             <span className={`text-[9px] px-2 py-0.5 rounded font-bold border ${
                               hist.status === 'Admission'
                                 ? 'bg-green-50 text-green-700 border-green-100'
-                                : hist.status === 'Lost'
+                                : hist.status === 'Lost' || hist.status === 'Rejected'
                                 ? 'bg-red-50 text-red-700 border-red-100'
-                                : hist.status === 'Hold'
+                                : hist.status === 'Hold' || hist.status === 'Follow-Up'
                                 ? 'bg-amber-50 text-amber-700 border-amber-100'
                                 : 'bg-blue-50 text-blue-700 border-blue-100'
                             }`}>

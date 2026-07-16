@@ -38,7 +38,7 @@ export default function AddStudentModal({
     universityId: '',
     courseIndex: '',
     city: '',
-    status: 'Active On Call',
+    status: 'New Lead',
   });
 
   const [formLoading, setFormLoading] = useState(false);
@@ -130,7 +130,7 @@ export default function AddStudentModal({
           universityId: '',
           courseIndex: '',
           city: '',
-          status: 'Active On Call',
+          status: 'New Lead',
         });
       }, 1200);
     } catch (err: any) {
@@ -377,26 +377,41 @@ export default function AddStudentModal({
                 onChange={handleInputChange}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium bg-white"
               >
+                <option value="New Lead">New Lead</option>
                 <option value="Active On Call">Active On Call</option>
                 <option value="Visit">Visit</option>
                 <option value="Online Counseling">Online Counseling</option>
+                <option value="Follow-Up">Follow-Up</option>
+                <option value="Processing">Processing</option>
                 <option value="Hold">Hold</option>
+                <option value="Rejected">Rejected</option>
                 <option value="Lost">Lost</option>
                 <option value="Admission">Admission</option>
               </select>
             </div>
 
              <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                    Remark
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-gray-700">
+                      Remark
+                    </label>
+                    {['Hold', 'Lost', 'Rejected', 'Follow-Up'].includes(formData.status) && (
+                      <span className="text-[11px] font-medium text-amber-600">
+                        Enter reason or next action date
+                      </span>
+                    )}
+                  </div>
                   <div className="relative">
                     <MessageCircle className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                       name="remark"
                       value={formData.remark}
                       onChange={handleInputChange}
-                      placeholder="Student update "
+                      placeholder={
+                        ['Hold', 'Lost', 'Rejected', 'Follow-Up'].includes(formData.status)
+                          ? 'Enter reason or next action date...'
+                          : 'Student update'
+                      }
                       className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
                       type="text"
                     />

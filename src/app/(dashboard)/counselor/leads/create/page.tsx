@@ -31,7 +31,7 @@ export default function CreateLeadPage() {
     universityId: '',
     courseIndex: '',
     city: '',
-    status: 'Active On Call',
+    status: 'New Lead',
   });
 
   const [formLoading, setFormLoading] = useState(false);
@@ -277,10 +277,14 @@ export default function CreateLeadPage() {
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-slate-400 font-semibold text-gray-800 transition-all bg-white"
                     >
+                      <option value="New Lead">New Lead</option>
                       <option value="Active On Call">Active On Call</option>
                       <option value="Visit">Visit</option>
                       <option value="Online Counseling">Online Counseling</option>
+                      <option value="Follow-Up">Follow-Up</option>
+                      <option value="Processing">Processing</option>
                       <option value="Hold">Hold</option>
+                      <option value="Rejected">Rejected</option>
                       <option value="Lost">Lost</option>
                       <option value="Admission">Admission</option>
                     </select>
@@ -377,14 +381,25 @@ export default function CreateLeadPage() {
 
                 {/* Row 4: Remark / Log */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                    Remark / Counselor Log Notes
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-gray-700">
+                      Remark / Counselor Log Notes
+                    </label>
+                    {['Hold', 'Lost', 'Rejected', 'Follow-Up'].includes(formData.status) && (
+                      <span className="text-[11px] font-medium text-amber-600">
+                        Enter reason or next action date
+                      </span>
+                    )}
+                  </div>
                   <textarea
                     name="remark"
                     value={formData.remark}
                     onChange={handleInputChange}
-                    placeholder="Enter counselor notes and initial updates here..."
+                    placeholder={
+                      ['Hold', 'Lost', 'Rejected', 'Follow-Up'].includes(formData.status)
+                        ? 'Enter reason or next action date...'
+                        : 'Enter counselor notes and initial updates here...'
+                    }
                     rows={4}
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium transition-all text-gray-800 leading-relaxed resize-y min-h-[100px]"
                   />
