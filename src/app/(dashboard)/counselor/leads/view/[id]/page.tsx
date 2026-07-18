@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { User, Phone, Building, Mail, MapPin, Calendar, MessageSquare, ArrowLeft, Loader2 } from 'lucide-react';
 import { StudentRecord } from '../../types';
 
@@ -11,6 +11,8 @@ interface ViewLeadPageProps {
 
 export default function ViewLeadPage({ params }: ViewLeadPageProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromAdmissions = searchParams.get('from') === 'admissions';
   const [studentId, setStudentId] = useState<string | null>(null);
   const [student, setStudent] = useState<StudentRecord | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,7 +50,7 @@ export default function ViewLeadPage({ params }: ViewLeadPageProps) {
 
   const goBack = () => {
     const isAdmin = document.cookie.includes('userRole=ADMIN');
-    router.push(isAdmin ? '/admin/students' : '/counselor/leads');
+    router.push(fromAdmissions ? '/admissions' : (isAdmin ? '/admin/students' : '/counselor/leads'));
   };
 
   if (loading) {
@@ -80,6 +82,22 @@ export default function ViewLeadPage({ params }: ViewLeadPageProps) {
     );
   }
 
+  const displayStatus = (student.status === 'Admission' && !fromAdmissions)
+    ? (student.preAdmissionStatus || 'Processing')
+    : (student.status || 'New Lead');
+
+  const displayRemark = fromAdmissions
+    ? (student.admissionRemark || '')
+    : (student.preAdmissionRemark || student.remark || '');
+
+  const filteredHistory = (student.remarkHistory || []).filter(hist => {
+    if (fromAdmissions) {
+      return hist.status === 'Admission';
+    } else {
+      return hist.status !== 'Admission';
+    }
+  });
+
   return (
     <div className="space-y-6 font-sans text-gray-800">
       {/* Page Header */}
@@ -98,16 +116,16 @@ export default function ViewLeadPage({ params }: ViewLeadPageProps) {
             </h1>
             <span
               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                student.status === 'Admission'
+                displayStatus === 'Admission'
                   ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                  : student.status === 'Lost'
+                  : displayStatus === 'Lost'
                   ? 'bg-red-50 text-red-700 border border-red-100'
-                  : student.status === 'Hold' || student.status === 'Follow-Up'
+                  : displayStatus === 'Hold' || displayStatus === 'Follow-Up'
                   ? 'bg-amber-50 text-amber-700 border border-amber-100'
                   : 'bg-blue-50 text-blue-700 border border-blue-100'
               }`}
             >
-              {student.status || 'New Lead'}
+              {displayStatus}
             </span>
           </div>
           <p className="text-xs text-gray-500 font-medium mt-0.5">
@@ -195,11 +213,11 @@ export default function ViewLeadPage({ params }: ViewLeadPageProps) {
               {/* Admission Status */}
               <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50/50 border border-slate-100/50 hover:bg-slate-50 transition-colors">
                 <div className={`p-2 rounded-lg ${
-                  student.status === 'Admission'
+                  displayStatus === 'Admission'
                     ? 'bg-green-50 text-green-600'
-                    : student.status === 'Lost'
+                    : displayStatus === 'Lost'
                     ? 'bg-red-50 text-red-600'
-                    : student.status === 'Hold' || student.status === 'Follow-Up'
+                    : displayStatus === 'Hold' || displayStatus === 'Follow-Up'
                     ? 'bg-amber-50 text-amber-600'
                     : 'bg-blue-50 text-blue-600'
                 }`}>
@@ -207,7 +225,7 @@ export default function ViewLeadPage({ params }: ViewLeadPageProps) {
                 </div>
                 <div>
                   <span className="text-[10px] text-gray-400 block font-bold uppercase tracking-wider">Admission Status</span>
-                  <span className="text-sm font-semibold text-slate-700">{student.status || 'New Lead'}</span>
+                  <span className="text-sm font-semibold text-slate-700">{displayStatus}</span>
                 </div>
               </div>
 
@@ -221,17 +239,17 @@ export default function ViewLeadPage({ params }: ViewLeadPageProps) {
                 <MessageSquare className="h-4 w-4 text-indigo-500" />
                 Counselor Remarks &amp; History
               </h3>
-              {student.remarkHistory && student.remarkHistory.length > 0 && (
+              {filteredHistory && filteredHistory.length > 0 && (
                 <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold border border-slate-200/40">
-                  {student.remarkHistory.length} entry{student.remarkHistory.length > 1 ? 'ies' : ''}
+                  {filteredHistory.length} entry{filteredHistory.length > 1 ? 'ies' : ''}
                 </span>
               )}
             </div>
 
             <div className="space-y-4">
-              {student.remarkHistory && student.remarkHistory.length > 0 ? (
+              {filteredHistory && filteredHistory.length > 0 ? (
                 <div className="space-y-4 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-100">
-                  {[...student.remarkHistory].reverse().map((hist, idx) => (
+                  {[...filteredHistory].reverse().map((hist, idx) => (
                     <div key={idx} className="flex gap-3 relative">
                       <div className="h-6 w-6 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0 z-10">
                         <MessageSquare className="h-3 w-3 text-slate-500" />
@@ -278,8 +296,8 @@ export default function ViewLeadPage({ params }: ViewLeadPageProps) {
               ) : (
                 <div className="bg-slate-50/60 border border-slate-100 rounded-xl p-4">
                   <div className="text-sm font-medium text-slate-800 leading-relaxed whitespace-pre-wrap">
-                    {student.remark ? (
-                      student.remark
+                    {displayRemark ? (
+                      displayRemark
                     ) : (
                       <span className="text-gray-400 italic">No remark provided yet.</span>
                     )}

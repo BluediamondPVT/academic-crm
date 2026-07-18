@@ -31,6 +31,10 @@ export interface StudentRecord {
   remark?: string;
   remarkUpdatedAt?: string;
   remarkHistory?: RemarkHistoryEntry[];
+  admissionRemark?: string;
+  admissionRemarkUpdatedAt?: string;
+  preAdmissionRemark?: string;
+  preAdmissionStatus?: string;
   universityId: string;
   universityName: string;
   courseName: string;

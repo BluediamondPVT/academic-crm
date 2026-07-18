@@ -168,9 +168,22 @@ export default function ConfirmedAdmissionsPage() {
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex flex-col gap-1 min-w-[150px] max-w-[300px]">
-                        {student.remark ? (
+                        {student.admissionRemarkUpdatedAt && student.admissionRemark && (
+                          <span className="text-[10px] font-semibold text-gray-400">
+                            {new Date(student.admissionRemarkUpdatedAt).toLocaleDateString('en-IN', {
+                              day: '2-digit',
+                              month: 'short', 
+                              year: 'numeric',
+                            })}{' '}
+                            {new Date(student.admissionRemarkUpdatedAt).toLocaleTimeString('en-IN', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                        )}
+                        {student.admissionRemark ? (
                           <div className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-800 bg-gray-100 px-2.5 py-1 rounded-lg wrap-break-word">
-                            {student.remark}
+                            {student.admissionRemark}
                           </div>
                         ) : (
                           <span className="text-xs text-gray-400 italic">No remark</span>
@@ -180,14 +193,14 @@ export default function ConfirmedAdmissionsPage() {
                     <td className="px-4 py-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <Link
-                          href={`/counselor/leads/view/${student._id}`}
+                          href={`/counselor/leads/view/${student._id}?from=admissions`}
                           className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                           title="View Profile Details"
                         >
                           <Eye className="h-4 w-4" />
                         </Link>
                         <Link
-                          href={`/counselor/leads/edit/${student._id}`}
+                          href={`/counselor/leads/edit/${student._id}?from=admissions`}
                           className="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all"
                           title="Edit Profile"
                         >

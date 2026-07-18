@@ -13,6 +13,10 @@ export interface IStudent extends Document {
   remark?:string;
   remarkUpdatedAt?: Date;
   remarkHistory?: IRemarkHistory[];
+  admissionRemark?: string;
+  admissionRemarkUpdatedAt?: Date;
+  preAdmissionRemark?: string;
+  preAdmissionStatus?: string;
   universityId: string;
   universityName: string;
   courseName: string;
@@ -42,6 +46,10 @@ const StudentSchema: Schema = new Schema(
         status: { type: String }
       }
     ],
+    admissionRemark: { type: String },
+    admissionRemarkUpdatedAt: { type: Date },
+    preAdmissionRemark: { type: String },
+    preAdmissionStatus: { type: String },
     universityId: { type: String, required: true },
     universityName: { type: String, required: true },
     courseName: { type: String, required: true },

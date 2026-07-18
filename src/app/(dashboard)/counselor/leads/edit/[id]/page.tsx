@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   User,
   Phone,
@@ -23,6 +23,8 @@ interface EditLeadPageProps {
 
 export default function EditLeadPage({ params }: EditLeadPageProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromAdmissions = searchParams.get('from') === 'admissions';
   const [studentId, setStudentId] = useState<string | null>(null);
   const [student, setStudent] = useState<StudentRecord | null>(null);
   const [loading, setLoading] = useState(true);
@@ -68,7 +70,7 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
           name: data.name || '',
           phoneNumber: data.phoneNumber || '',
           email: data.email || '',
-          remark: data.remark || '',
+          remark: data.status === 'Admission' ? (data.admissionRemark || '') : (data.remark || ''),
           city: data.city || '',
           status: data.status || 'New Lead',
         });
@@ -87,11 +89,21 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'status') {
+      setFormData(prev => ({
+        ...prev,
+        status: value,
+        remark: value === 'Admission'
+          ? (student?.admissionRemark || '')
+          : (student?.remark || '')
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const goBack = () => {
-    router.push(isAdmin ? '/admin/students' : '/counselor/leads');
+    router.push(fromAdmissions ? '/admissions' : (isAdmin ? '/admin/students' : '/counselor/leads'));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

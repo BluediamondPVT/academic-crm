@@ -40,36 +40,107 @@ export async function PUT(
     }
 
     const body = await req.json();
+    const existingStudent = await Student.findById(id);
+    if (!existingStudent) {
+      return NextResponse.json({ error: 'Student not found' }, { status: 404 });
+    }
 
-    // Check if remark is being updated and set timestamp
-    if (body.remark !== undefined) {
-      const existingStudent = await Student.findById(id);
-      if (!existingStudent) {
-        return NextResponse.json({ error: 'Student not found' }, { status: 404 });
-      }
-      const oldRemark = (existingStudent.remark || '').trim();
-      const newRemark = (body.remark || '').trim();
-      if (oldRemark !== newRemark) {
-        if (newRemark === '') {
-          body.remarkUpdatedAt = null;
-        } else {
-          body.remarkUpdatedAt = new Date();
-          
-          const currentStatus = body.status || existingStudent.status || 'Active On Call';
+    const currentStatus = body.status || existingStudent.status || 'Active On Call';
+    const oldStatus = existingStudent.status || 'New Lead';
+
+    // Handle Admission state transitions and remark routing
+    if (currentStatus === 'Admission') {
+      // Transitioning into Admission
+      if (oldStatus !== 'Admission') {
+        body.preAdmissionStatus = oldStatus;
+        body.preAdmissionRemark = existingStudent.remark || '';
+        
+        // The remark in body.remark is the new admission remark
+        const newAdmissionRemark = (body.remark || '').trim();
+        body.admissionRemark = newAdmissionRemark;
+        body.admissionRemarkUpdatedAt = new Date();
+        
+        // Keep the pre-admission remark in body.remark so it doesn't get overridden by admission remark
+        body.remark = existingStudent.remark || '';
+        
+        // Update history log if new remark is provided
+        if (newAdmissionRemark !== '') {
           const history = [...(existingStudent.remarkHistory || [])];
-          if (history.length === 0 && oldRemark !== '') {
-            history.push({
-              remark: oldRemark,
-              updatedAt: existingStudent.remarkUpdatedAt || existingStudent.updatedAt || new Date(),
-              status: existingStudent.status || 'Active On Call'
-            });
-          }
           history.push({
-            remark: newRemark,
+            remark: newAdmissionRemark,
+            updatedAt: new Date(),
+            status: 'Admission'
+          });
+          body.remarkHistory = history;
+        }
+      } else {
+        // Already in Admission status, editing student
+        if (body.remark !== undefined) {
+          const oldAdmissionRemark = (existingStudent.admissionRemark || '').trim();
+          const newAdmissionRemark = (body.remark || '').trim();
+          
+          if (oldAdmissionRemark !== newAdmissionRemark) {
+            body.admissionRemark = newAdmissionRemark;
+            body.admissionRemarkUpdatedAt = new Date();
+            
+            // Push updated admission remark to history
+            if (newAdmissionRemark !== '') {
+              const history = [...(existingStudent.remarkHistory || [])];
+              history.push({
+                remark: newAdmissionRemark,
+                updatedAt: new Date(),
+                status: 'Admission'
+              });
+              body.remarkHistory = history;
+            }
+          }
+          // Prevent overwriting the pre-admission remark field
+          body.remark = existingStudent.remark || '';
+        }
+      }
+    } else {
+      // Transitioning OUT of Admission back to a normal status
+      if (oldStatus === 'Admission') {
+        // If they changed status back, body.remark is a new pre-admission remark
+        const newPreAdmissionRemark = (body.remark || '').trim();
+        body.remark = newPreAdmissionRemark;
+        body.remarkUpdatedAt = new Date();
+        
+        if (newPreAdmissionRemark !== '') {
+          const history = [...(existingStudent.remarkHistory || [])];
+          history.push({
+            remark: newPreAdmissionRemark,
             updatedAt: new Date(),
             status: currentStatus
           });
           body.remarkHistory = history;
+        }
+      } else {
+        // Regular pre-admission update
+        if (body.remark !== undefined) {
+          const oldRemark = (existingStudent.remark || '').trim();
+          const newRemark = (body.remark || '').trim();
+          if (oldRemark !== newRemark) {
+            if (newRemark === '') {
+              body.remarkUpdatedAt = undefined;
+            } else {
+              body.remarkUpdatedAt = new Date();
+              const history = [...(existingStudent.remarkHistory || [])];
+              if (history.length === 0 && oldRemark !== '') {
+                history.push({
+                  remark: oldRemark,
+                  updatedAt: existingStudent.remarkUpdatedAt || existingStudent.updatedAt || new Date(),
+                  status: oldStatus
+                });
+              }
+              history.push({
+                remark: newRemark,
+                updatedAt: new Date(),
+                status: currentStatus
+              });
+              body.remarkHistory = history;
+            }
+          }
         }
       }
     }

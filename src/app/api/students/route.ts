@@ -47,12 +47,18 @@ export async function POST(req: Request) {
       );
     }
 
+    const isAdmission = status === 'Admission';
     const newStudent = await Student.create({
       name,
       phoneNumber,
       email,
-      remark,
+      remark: isAdmission ? '' : remark,
+      remarkUpdatedAt: isAdmission ? undefined : (remark && remark.trim() !== '' ? new Date() : undefined),
       remarkHistory: remark && remark.trim() !== '' ? [{ remark: remark.trim(), updatedAt: new Date(), status: status || 'Active On Call' }] : [],
+      admissionRemark: isAdmission ? remark : undefined,
+      admissionRemarkUpdatedAt: isAdmission ? new Date() : undefined,
+      preAdmissionStatus: isAdmission ? 'New Lead' : undefined,
+      preAdmissionRemark: isAdmission ? '' : undefined,
       universityId,
       universityName,
       courseName,

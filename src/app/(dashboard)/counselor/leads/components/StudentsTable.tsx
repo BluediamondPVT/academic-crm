@@ -124,33 +124,60 @@ export default function StudentsTable({
                   <td className="px-4 py-4">
                     <span
                       className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusColor(
-                        student.status
+                        student.status === 'Admission' ? (student.preAdmissionStatus || 'Processing') : student.status
                       )}`}
                     >
-                      {student.status}
+                      {student.status === 'Admission' ? (student.preAdmissionStatus || 'Processing') : student.status}
                     </span> 
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex flex-col gap-1 min-w-[200px] max-w-[400px]">
-                      {student.remarkUpdatedAt && student.remark && (
-                        <span className="text-[10px] font-semibold text-gray-400">
-                          {new Date(student.remarkUpdatedAt).toLocaleDateString('en-IN', {
-                            day: '2-digit',
-                            month: 'short', 
-                            year: 'numeric',
-                          })}{' '}
-                          {new Date(student.remarkUpdatedAt).toLocaleTimeString('en-IN', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </span>
-                      )}
-                      {student.remark ? (
-                        <div className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-800 bg-gray-100 px-2.5 py-1 rounded-lg wrap-break-word">
-                          {student.remark}
-                        </div>
+                      {student.status === 'Admission' ? (
+                        <>
+                          {student.remarkUpdatedAt && (student.preAdmissionRemark || student.remark) && (
+                            <span className="text-[10px] font-semibold text-gray-400">
+                              {new Date(student.remarkUpdatedAt).toLocaleDateString('en-IN', {
+                                day: '2-digit',
+                                month: 'short', 
+                                year: 'numeric',
+                              })}{' '}
+                              {new Date(student.remarkUpdatedAt).toLocaleTimeString('en-IN', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </span>
+                          )}
+                          {(student.preAdmissionRemark || student.remark) ? (
+                            <div className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-800 bg-gray-100 px-2.5 py-1 rounded-lg wrap-break-word">
+                              {student.preAdmissionRemark || student.remark}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400 italic">No remark</span>
+                          )}
+                        </>
                       ) : (
-                        <span className="text-xs text-gray-400 italic">No remark</span>
+                        <>
+                          {student.remarkUpdatedAt && student.remark && (
+                            <span className="text-[10px] font-semibold text-gray-400">
+                              {new Date(student.remarkUpdatedAt).toLocaleDateString('en-IN', {
+                                day: '2-digit',
+                                month: 'short', 
+                                year: 'numeric',
+                              })}{' '}
+                              {new Date(student.remarkUpdatedAt).toLocaleTimeString('en-IN', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </span>
+                          )}
+                          {student.remark ? (
+                            <div className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-800 bg-gray-100 px-2.5 py-1 rounded-lg wrap-break-word">
+                              {student.remark}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400 italic">No remark</span>
+                          )}
+                        </>
                       )}
                     </div>
                   </td>
