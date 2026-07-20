@@ -106,7 +106,6 @@ export default function ConfirmedAdmissionsPage() {
                 <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Contact Details</th>
                 <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">University &amp; Course</th>
                 <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">City</th>
-                <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Total Fee</th>
                 <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Remark / Notes</th>
                 <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100 text-right">Actions</th>
               </tr>
@@ -114,14 +113,14 @@ export default function ConfirmedAdmissionsPage() {
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-indigo-500" />
                     Loading admissions database...
                   </td>
                 </tr>
               ) : filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
                     <div className="max-w-xs mx-auto py-4">
                       <User className="h-10 w-10 text-gray-300 mx-auto mb-2" />
                       <p className="font-semibold text-gray-600">No confirmed admissions</p>
@@ -159,11 +158,6 @@ export default function ConfirmedAdmissionsPage() {
                       <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg">
                         <Building className="h-3.5 w-3.5 text-indigo-600" />
                         {student.city}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="text-xs font-black text-slate-800">
-                        {student.totalFee ? `₹${student.totalFee.toLocaleString('en-IN')}` : 'N/A'}
                       </div>
                     </td>
                     <td className="px-4 py-4">

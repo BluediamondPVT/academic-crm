@@ -45,6 +45,13 @@ export default function AddStudentModal({
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Payment tracking states
+  const [paymentType, setPaymentType] = useState<'Yearly' | 'Semester' | 'Custom'>('Yearly');
+  const [amountPaid, setAmountPaid] = useState<number | ''>('');
+  const [paymentMode, setPaymentMode] = useState<'UPI' | 'Bank' | 'Cash'>('UPI');
+  const [nextDueDate, setNextDueDate] = useState<string>('');
+  const [payoutPercentage, setPayoutPercentage] = useState<number | ''>('');
+
   if (!isOpen) return null;
 
   const selectedUniversity = universities.find(u => u._id === formData.universityId);
@@ -53,12 +60,53 @@ export default function AddStudentModal({
       ? selectedUniversity.courses[Number(formData.courseIndex)]
       : null;
 
+  const handlePaymentPlanChange = (plan: 'Yearly' | 'Semester' | 'Custom') => {
+    setPaymentType(plan);
+    if (plan === 'Yearly') {
+      const yearly = selectedCourse?.yearFee || (selectedCourse?.totalFee && selectedCourse?.duration ? Math.round(selectedCourse.totalFee / selectedCourse.duration) : selectedCourse?.totalFee) || 0;
+      setAmountPaid(yearly ? Number(yearly) : '');
+    } else if (plan === 'Semester') {
+      const sem = selectedCourse?.semesterFee || (selectedCourse?.totalFee && selectedCourse?.duration ? Math.round(selectedCourse.totalFee / (selectedCourse.duration * 2)) : 0) || 0;
+      setAmountPaid(sem ? Number(sem) : '');
+    } else if (plan === 'Custom') {
+      setAmountPaid('');
+    }
+  };
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     if (name === 'universityId') {
       setFormData(prev => ({ ...prev, universityId: value, courseIndex: '' }));
+    } else if (name === 'courseIndex') {
+      const courseIdx = value;
+      const course = selectedUniversity && courseIdx !== '' ? selectedUniversity.courses[Number(courseIdx)] : null;
+      setFormData(prev => ({ ...prev, courseIndex: value }));
+      if (formData.status === 'Processing' || formData.status === 'Admission') {
+        const yearly = course?.yearFee || (course?.totalFee && course?.duration ? Math.round(course.totalFee / course.duration) : course?.totalFee) || 0;
+        setPaymentType('Yearly');
+        setAmountPaid(yearly ? Number(yearly) : '');
+        if (formData.status === 'Admission') {
+          setPayoutPercentage(course?.payoutPercentage || 0);
+        } else {
+          setPayoutPercentage('');
+        }
+      }
+    } else if (name === 'status') {
+      if (value === 'Processing' || value === 'Admission') {
+        const yearly = selectedCourse?.yearFee || (selectedCourse?.totalFee && selectedCourse?.duration ? Math.round(selectedCourse.totalFee / selectedCourse.duration) : selectedCourse?.totalFee) || 0;
+        setPaymentType('Yearly');
+        setAmountPaid(yearly ? Number(yearly) : '');
+        setPaymentMode('UPI');
+        setNextDueDate('');
+        if (value === 'Admission') {
+          setPayoutPercentage(selectedCourse?.payoutPercentage || 0);
+        } else {
+          setPayoutPercentage('');
+        }
+      }
+      setFormData(prev => ({ ...prev, status: value }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -87,7 +135,7 @@ export default function AddStudentModal({
     setFormLoading(true);
 
     try {
-      const payload = {
+      const payload: any = {
         name: formData.name.trim(),
         phoneNumber: formData.phoneNumber.trim(),
         email: formData.email,
@@ -103,6 +151,22 @@ export default function AddStudentModal({
         semesterFee: selectedCourse.semesterFee,
         status: formData.status,
       };
+
+      if (formData.status === 'Processing' || formData.status === 'Admission') {
+        const paidVal = Number(amountPaid) || 0;
+        payload.totalPaid = paidVal;
+        if (paidVal > 0) {
+          payload.paymentTransaction = {
+            paymentType,
+            amount: paidVal,
+            paymentMode,
+            nextDueDate: nextDueDate ? new Date(nextDueDate).toISOString() : undefined,
+          };
+        }
+        if (formData.status === 'Admission') {
+          payload.payoutPercentage = Number(payoutPercentage) || 0;
+        }
+      }
 
       const res = await fetch('/api/students', {
         method: 'POST',
@@ -132,6 +196,11 @@ export default function AddStudentModal({
           city: '',
           status: 'New Lead',
         });
+        setPaymentType('Yearly');
+        setAmountPaid('');
+        setPaymentMode('UPI');
+        setNextDueDate('');
+        setPayoutPercentage('');
       }, 1200);
     } catch (err: any) {
       setError(err.message || 'Failed to submit form');
@@ -384,11 +453,121 @@ export default function AddStudentModal({
                 <option value="Follow-Up">Follow-Up</option>
                 <option value="Processing">Processing</option>
                 <option value="Hold">Hold</option>
-                
                 <option value="Lost">Lost</option>
                 <option value="Admission">Admission</option>
               </select>
             </div>
+
+            {/* Direct Inline Payment Fields */}
+            {formData.status === 'Admission' && selectedCourse && (
+              <div className="bg-slate-50 border border-slate-200/60 rounded-2xl p-4 space-y-4 transition-all duration-300">
+                <div className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5 pb-2 border-b border-slate-200">
+                  <span className="h-2 w-2 rounded-full bg-indigo-600 animate-pulse"></span>
+                  Payment details for {formData.status}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wider">
+                    Fee Payment Plan
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['Yearly', 'Semester', 'Custom'] as const).map((plan) => (
+                      <button
+                        key={plan}
+                        type="button"
+                        onClick={() => handlePaymentPlanChange(plan)}
+                        className={`py-2 px-2.5 rounded-xl border text-xs font-bold flex flex-col items-center justify-center transition-all ${
+                          paymentType === plan
+                            ? 'border-indigo-600 bg-indigo-50/80 text-indigo-900 ring-1 ring-indigo-600/20 shadow-xxs'
+                            : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        <span>{plan}</span>
+                        <span className="text-[9px] font-medium text-gray-400 mt-0.5">
+                          {plan === 'Yearly'
+                            ? `₹${(selectedCourse.yearFee || (selectedCourse.totalFee && selectedCourse.duration ? Math.round(selectedCourse.totalFee / selectedCourse.duration) : selectedCourse.totalFee || 0)).toLocaleString('en-IN')}`
+                            : plan === 'Semester'
+                            ? `₹${(selectedCourse.semesterFee || (selectedCourse.totalFee && selectedCourse.duration ? Math.round(selectedCourse.totalFee / (selectedCourse.duration * 2)) : 0)).toLocaleString('en-IN')}`
+                            : 'Custom'}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-600 mb-1">
+                      Amount Paid (₹) <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">₹</span>
+                      <input
+                        type="number"
+                        value={amountPaid}
+                        onChange={(e) => setAmountPaid(e.target.value === '' ? '' : Number(e.target.value))}
+                        placeholder="Enter amount"
+                        className="w-full pl-6 pr-3 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-600 mb-1">
+                      Payment Mode
+                    </label>
+                    <select
+                      value={paymentMode}
+                      onChange={(e) => setPaymentMode(e.target.value as any)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
+                    >
+                      <option value="UPI">UPI / QR Code</option>
+                      <option value="Bank">Bank Transfer</option>
+                      <option value="Cash">Cash Payment</option>
+                    </select>
+                  </div>
+                </div>
+
+                {paymentType === 'Custom' && (
+                  <div>
+                    <label className="block text-xs font-bold text-gray-600 mb-1">
+                      Next Due Date
+                    </label>
+                    <input
+                      type="date"
+                      value={nextDueDate}
+                      onChange={(e) => setNextDueDate(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
+                    />
+                  </div>
+                )}
+
+                {/* Inline Summary */}
+                <div className="bg-slate-900 rounded-xl p-3 text-white">
+                  <div className="grid grid-cols-3 gap-1.5 text-center">
+                    <div>
+                      <span className="text-[8px] text-slate-400 block uppercase font-medium">Total</span>
+                      <span className="text-xs font-bold block mt-0.5 text-white">
+                        ₹{(selectedCourse.totalFee || 0).toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[8px] text-emerald-300 block uppercase font-medium">Paying Now</span>
+                      <span className="text-xs font-bold block mt-0.5 text-emerald-400">
+                        ₹{(Number(amountPaid) || 0).toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[8px] text-amber-300 block uppercase font-medium">Remaining</span>
+                      <span className="text-xs font-bold block mt-0.5 text-amber-300">
+                        ₹{Math.max(0, (selectedCourse.totalFee || 0) - (Number(amountPaid) || 0)).toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
              <div>
                   <div className="flex items-center justify-between mb-1.5">

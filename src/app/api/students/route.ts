@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import Student from '@/models/Student';
+import University from '@/models/University';
 
 export async function GET() {
   try {
@@ -37,6 +38,7 @@ export async function POST(req: Request) {
       status,
       counselorName,
       city,
+      totalPaid,
     } = body;
 
     // Validate required fields
@@ -47,7 +49,31 @@ export async function POST(req: Request) {
       );
     }
 
+    const feeTotal = Number(totalFee) || 0;
+    const paidTotal = Number(totalPaid) || 0;
+    const remainingFee = feeTotal - paidTotal;
+
     const isAdmission = status === 'Admission';
+    const payments = body.paymentTransaction ? [{
+      paymentType: body.paymentTransaction.paymentType || 'Yearly',
+      amount: Number(body.paymentTransaction.amount) || 0,
+      paymentMode: body.paymentTransaction.paymentMode || 'UPI',
+      nextDueDate: body.paymentTransaction.nextDueDate ? new Date(body.paymentTransaction.nextDueDate) : undefined,
+      date: new Date(),
+      remark: body.paymentTransaction.remark || remark || ''
+    }] : [];
+
+    // Automatically lookup payoutPercentage from University settings
+    let coursePayout = 0;
+    try {
+      const university = await University.findById(universityId);
+      if (university && university.payout) {
+        coursePayout = parseFloat(university.payout.replace(/[^0-9.]/g, '')) || 0;
+      }
+    } catch (e) {
+      console.error('Error fetching university payout:', e);
+    }
+
     const newStudent = await Student.create({
       name,
       phoneNumber,
@@ -64,9 +90,13 @@ export async function POST(req: Request) {
       courseName,
       specialization,
       duration,
-      totalFee,
+      totalFee: feeTotal,
       yearFee,
       semesterFee,
+      payoutPercentage: coursePayout,
+      totalPaid: paidTotal,
+      remainingFee,
+      payments,
       status: status || 'Active On Call',
       counselorName,
       city,

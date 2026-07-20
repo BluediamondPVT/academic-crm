@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import Student from '@/models/Student';
+import University from '@/models/University';
 
 export async function GET(
   req: Request,
@@ -54,6 +55,17 @@ export async function PUT(
       if (oldStatus !== 'Admission') {
         body.preAdmissionStatus = oldStatus;
         body.preAdmissionRemark = existingStudent.remark || '';
+        
+        // Automatically lookup payoutPercentage from University settings
+        try {
+          const uId = body.universityId || existingStudent.universityId;
+          const university = await University.findById(uId);
+          if (university && university.payout) {
+            body.payoutPercentage = parseFloat(university.payout.replace(/[^0-9.]/g, '')) || 0;
+          }
+        } catch (e) {
+          console.error('Error fetching university payout ratio:', e);
+        }
         
         // The remark in body.remark is the new admission remark
         const newAdmissionRemark = (body.remark || '').trim();
@@ -144,6 +156,26 @@ export async function PUT(
         }
       }
     }
+
+    // Handle new payment transaction if submitted
+    if (body.paymentTransaction) {
+      const history = [...(existingStudent.payments || [])];
+      history.push({
+        paymentType: body.paymentTransaction.paymentType || 'Yearly',
+        amount: Number(body.paymentTransaction.amount) || 0,
+        paymentMode: body.paymentTransaction.paymentMode || 'UPI',
+        nextDueDate: body.paymentTransaction.nextDueDate ? new Date(body.paymentTransaction.nextDueDate) : undefined,
+        date: new Date(),
+        remark: body.paymentTransaction.remark || (body.remark && body.remark.trim() !== '' ? body.remark : (existingStudent.admissionRemark || ''))
+      });
+      body.payments = history;
+      delete body.paymentTransaction;
+    }
+
+    // Calculate remaining fee if totalFee or totalPaid are updated/present
+    const newTotalFee = body.totalFee !== undefined ? Number(body.totalFee) : existingStudent.totalFee || 0;
+    const newTotalPaid = body.totalPaid !== undefined ? Number(body.totalPaid) : existingStudent.totalPaid || 0;
+    body.remainingFee = newTotalFee - newTotalPaid;
 
     const updatedStudent = await Student.findByIdAndUpdate(
       id,

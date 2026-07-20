@@ -25,6 +25,17 @@ export interface IStudent extends Document {
   totalFee?: number;
   yearFee?: number;
   semesterFee?: number;
+  payoutPercentage?: number;
+  totalPaid?: number;
+  remainingFee?: number;
+  payments?: {
+    paymentType: string;
+    amount: number;
+    paymentMode: string;
+    nextDueDate?: Date;
+    date: Date;
+    remark?: string;
+  }[];
   status: string;
   counselorName?: string;
   city: string;
@@ -55,9 +66,22 @@ const StudentSchema: Schema = new Schema(
     courseName: { type: String, required: true },
     specialization: { type: String },
     duration: { type: Number },
-    totalFee: { type: Number },
+    totalFee: { type: Number, default: 0 },
     yearFee: { type: Number }, 
     semesterFee: { type: Number },
+    payoutPercentage: { type: Number, default: 0 },
+    totalPaid: { type: Number, default: 0 },
+    remainingFee: { type: Number, default: 0 },
+    payments: [
+      {
+        paymentType: { type: String },
+        amount: { type: Number },
+        paymentMode: { type: String },
+        nextDueDate: { type: Date },
+        date: { type: Date, default: Date.now },
+        remark: { type: String }
+      }
+    ],
     status: {
       type: String,
       enum: ['New Lead', 'Active On Call', 'Visit', 'Online Counseling', 'Follow-Up', 'Processing', 'Hold', 'Lost', 'Admission'],

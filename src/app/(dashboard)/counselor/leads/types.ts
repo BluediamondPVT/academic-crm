@@ -6,6 +6,7 @@ export interface Course {
   totalFee: number;
   yearFee: number;
   semesterFee: number;
+  payoutPercentage?: number;
 }
 
 export interface University {
@@ -44,6 +45,17 @@ export interface StudentRecord {
   totalFee?: number;
   yearFee?: number;
   semesterFee?: number;
+  payoutPercentage?: number;
+  totalPaid?: number;
+  remainingFee?: number;
+  payments?: {
+    paymentType: string;
+    amount: number;
+    paymentMode: string;
+    nextDueDate?: string;
+    date: string;
+    remark?: string;
+  }[];
   status: string;
   createdAt: string;
 }

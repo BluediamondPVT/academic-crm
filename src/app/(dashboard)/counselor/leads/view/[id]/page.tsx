@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { User, Phone, Building, Mail, MapPin, Calendar, MessageSquare, ArrowLeft, Loader2 } from 'lucide-react';
+import { User, Phone, Building, Mail, MapPin, Calendar, MessageSquare, ArrowLeft, Loader2, Edit3, Clock, CreditCard, Receipt } from 'lucide-react';
 import { StudentRecord } from '../../types';
 
 interface ViewLeadPageProps {
@@ -101,36 +101,49 @@ export default function ViewLeadPage({ params }: ViewLeadPageProps) {
   return (
     <div className="space-y-6 font-sans text-gray-800">
       {/* Page Header */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={goBack}
-          className="p-2.5 text-gray-500 hover:text-gray-800 hover:bg-white bg-white/60 border border-gray-100 rounded-xl transition-all shadow-xs"
-          title="Go Back"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </button>
-        <div>
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <h1 className="text-xl font-extrabold text-[#112a46] tracking-tight">
-              Enquiry details of {student.name}
-            </h1>
-            <span
-              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                displayStatus === 'Admission'
-                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                  : displayStatus === 'Lost'
-                  ? 'bg-red-50 text-red-700 border border-red-100'
-                  : displayStatus === 'Hold' || displayStatus === 'Follow-Up'
-                  ? 'bg-amber-50 text-amber-700 border border-amber-100'
-                  : 'bg-blue-50 text-blue-700 border border-blue-100'
-              }`}
-            >
-              {displayStatus}
-            </span>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={goBack}
+            className="p-2.5 text-gray-500 hover:text-gray-800 hover:bg-white bg-white/60 border border-gray-100 rounded-xl transition-all shadow-xs"
+            title="Go Back"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <div>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h1 className="text-xl font-extrabold text-[#112a46] tracking-tight">
+                Enquiry details of {student.name}
+              </h1>
+              <span
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                  displayStatus === 'Admission'
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                    : displayStatus === 'Lost'
+                    ? 'bg-red-50 text-red-700 border border-red-100'
+                    : displayStatus === 'Hold' || displayStatus === 'Follow-Up'
+                    ? 'bg-amber-50 text-amber-700 border border-amber-100'
+                    : 'bg-blue-50 text-blue-700 border border-blue-100'
+                }`}
+              >
+                {displayStatus}
+              </span>
+            </div>
+            <p className="text-xs text-gray-500 font-medium mt-0.5">
+              Course allocation, fee structure, and counselor logs
+            </p>
           </div>
-          <p className="text-xs text-gray-500 font-medium mt-0.5">
-            Course allocation, fee structure, and counselor logs
-          </p>
+        </div>
+
+        {/* Edit Button */}
+        <div>
+          <button
+            onClick={() => router.push(`/counselor/leads/edit/${student._id}${fromAdmissions ? '?from=admissions' : ''}`)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#112a46] hover:bg-[#1a3d66] active:scale-98 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
+          >
+            <Edit3 className="h-3.5 w-3.5" />
+            Edit Profile
+          </button>
         </div>
       </div>
 
@@ -386,9 +399,209 @@ export default function ViewLeadPage({ params }: ViewLeadPageProps) {
                   </span>
                 </div>
               </div>
+
+              {/* Total Paid & Remaining Fee */}
+              <div className="grid grid-cols-2 gap-3 border-t border-slate-100/60 pt-3">
+                <div className="bg-emerald-50/50 border border-emerald-100/60 rounded-xl p-3 hover:bg-emerald-50 transition-colors">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-600 block">Total Paid</span>
+                  <span className="text-sm font-black text-emerald-950 mt-0.5 block">
+                    {student.totalPaid ? `₹${student.totalPaid.toLocaleString('en-IN')}` : '₹0'}
+                  </span>
+                </div>
+
+                <div className="bg-rose-50/50 border border-rose-100/60 rounded-xl p-3 hover:bg-rose-50 transition-colors">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-rose-600 block">Remaining Fee</span>
+                  <span className="text-sm font-black text-rose-950 mt-0.5 block">
+                    {student.remainingFee !== undefined ? `₹${student.remainingFee.toLocaleString('en-IN')}` : 'N/A'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Payment Mode & Next Due Date */}
+              {student.payments && student.payments.length > 0 && (
+                <div className="grid grid-cols-2 gap-3 border-t border-slate-100/60 pt-3">
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 hover:bg-slate-100/60 transition-colors">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">Payment Mode</span>
+                    <span className="text-sm font-bold text-slate-700 mt-0.5 block">
+                      {student.payments[student.payments.length - 1].paymentMode || 'N/A'}
+                    </span>
+                  </div>
+
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 hover:bg-slate-100/60 transition-colors">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">Next Due Date</span>
+                    <span className="text-sm font-bold text-slate-700 mt-0.5 block">
+                      {student.payments[student.payments.length - 1].nextDueDate 
+                        ? new Date(student.payments[student.payments.length - 1].nextDueDate!).toLocaleDateString('en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                          })
+                        : 'N/A'}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Payout & Profit */}
+              {student.payoutPercentage !== undefined && student.payoutPercentage > 0 && (
+                <div className="grid grid-cols-2 gap-3 border-t border-slate-100/60 pt-3">
+                  <div className="bg-indigo-50/50 border border-indigo-100/60 rounded-xl p-3 hover:bg-indigo-50 transition-colors">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-600 block">Payout Ratio</span>
+                    <span className="text-sm font-black text-indigo-950 mt-0.5 block">
+                      {student.payoutPercentage}%
+                    </span>
+                  </div>
+
+                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 text-white hover:bg-slate-800 transition-colors">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-300 block">Our Profit</span>
+                    <span className="text-sm font-black text-indigo-200 mt-0.5 block">
+                      ₹{Math.round(((student.totalPaid || 0) * (student.payoutPercentage || 0)) / 100).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
+        </div>
+      </div>
 
+      {/* Full Width Payment & Installments History Section */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-xs p-6">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4 flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <Receipt className="h-4 w-4 text-emerald-600" />
+            Payment &amp; Installments History
+          </span>
+          {student.payments && student.payments.length > 0 && (
+            <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold">
+              {student.payments.length} Logged
+            </span>
+          )}
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {student.payments && student.payments.length > 0 ? (
+            student.payments.map((pmt, idx) => {
+              const cumulativePaid = student.payments!
+                .slice(0, idx + 1)
+                .reduce((acc, curr) => acc + (curr.amount || 0), 0);
+              const totalCourseFee = Number(student.totalFee || 0);
+              const balanceAfter = Math.max(0, totalCourseFee - cumulativePaid);
+
+              return (
+                <div key={idx} className="bg-slate-50/80 border border-slate-200/60 rounded-xl p-4 transition-all flex flex-col justify-between">
+                  <div>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black bg-indigo-600 text-white px-2.5 py-0.5 rounded-md">
+                          # {idx + 1}
+                        </span>
+                        <span className="text-xs font-bold text-slate-800">
+                          {pmt.paymentType || 'Payment'} Plan
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500">
+                        <Clock className="h-3.5 w-3.5 text-slate-400" />
+                        <span>
+                          {new Date(pmt.date).toLocaleDateString('en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                          })}{' '}
+                          {new Date(pmt.date).toLocaleTimeString('en-IN', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-3 text-xs">
+                      <div>
+                        <span className="text-slate-400 block font-medium text-[10px] uppercase">Paid Amount</span>
+                        <span className="text-sm font-black text-emerald-600 block mt-0.5">
+                          ₹{pmt.amount ? pmt.amount.toLocaleString('en-IN') : '0'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block font-medium text-[10px] uppercase">Remaining Balance</span>
+                        <span className="text-sm font-black text-rose-600 block mt-0.5">
+                          ₹{balanceAfter.toLocaleString('en-IN')}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block font-medium text-[10px] uppercase">Payment Mode</span>
+                        <span className={`inline-block mt-0.5 font-bold text-[11px] px-2 py-0.5 rounded ${
+                          pmt.paymentMode === 'UPI'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                            : pmt.paymentMode === 'Bank'
+                            ? 'bg-blue-50 text-blue-700 border border-blue-100'
+                            : 'bg-amber-50 text-amber-700 border border-amber-100'
+                        }`}>
+                          {pmt.paymentMode || 'UPI'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {pmt.nextDueDate && (
+                    <div className="mt-3 text-[11px] text-slate-600 flex items-center justify-between bg-white px-3 py-1.5 rounded-lg border border-slate-150">
+                      <span className="font-medium text-slate-500">Next Due Date:</span>
+                      <span className="font-bold text-slate-800">
+                        {new Date(pmt.nextDueDate).toLocaleDateString('en-IN', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* {pmt.remark && (
+                    <div className="mt-2 text-[11px] text-slate-600 bg-white p-2 rounded border border-slate-150 flex items-start gap-1.5">
+                      <MessageSquare className="h-3 w-3 text-slate-400 shrink-0 mt-0.5" />
+                      <span><strong className="text-slate-700">Note:</strong> {pmt.remark}</span>
+                    </div>
+                  )} */}
+                </div>
+              );
+            })
+          ) : student.totalPaid && student.totalPaid > 0 ? (
+            <div className="bg-slate-50/80 border border-slate-200/60 rounded-xl p-4 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between border-b border-slate-200/60 pb-2.5">
+                  <span className="text-[10px] font-black bg-indigo-600 text-white px-2.5 py-0.5 rounded-md">
+                    # 1
+                  </span>
+                  <span className="text-xs font-bold text-slate-800">Initial Payment</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-3 text-xs">
+                  <div>
+                    <span className="text-slate-400 block font-medium text-[10px] uppercase">Paid Amount</span>
+                    <span className="text-sm font-black text-emerald-600 block mt-0.5">
+                      ₹{student.totalPaid.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block font-medium text-[10px] uppercase">Remaining Balance</span>
+                    <span className="text-sm font-black text-rose-600 block mt-0.5">
+                      ₹{(student.remainingFee !== undefined ? student.remainingFee : Math.max(0, (student.totalFee || 0) - student.totalPaid)).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block font-medium text-[10px] uppercase">Payment Mode</span>
+                    <span className="inline-block mt-0.5 font-bold text-[11px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-100">
+                      UPI / Bank
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="col-span-full text-xs text-gray-400 italic text-center py-6">
+              No payment history recorded yet.
+            </div>
+          )}
         </div>
       </div>
     </div>

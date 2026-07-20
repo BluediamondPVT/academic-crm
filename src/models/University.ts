@@ -7,6 +7,7 @@ export interface ICourse {
   totalFee: number;
   yearFee: number;
   semesterFee: number;
+  payoutPercentage?: number;
 }
 
 export interface IUniversity extends Document {
@@ -29,6 +30,7 @@ const CourseSchema: Schema = new Schema({
   totalFee: { type: Number, required: true },
   yearFee: { type: Number, required: true },
   semesterFee: { type: Number, required: true },
+  payoutPercentage: { type: Number, required: true, default: 0 },
 });
 
 const UniversitySchema: Schema = new Schema(
