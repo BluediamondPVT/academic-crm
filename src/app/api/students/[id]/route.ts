@@ -1,14 +1,20 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import Student from '@/models/Student';
 import University from '@/models/University';
+import { verifyApiAuth } from '@/utils/authGuard';
 
 export async function GET(
-  req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectToDatabase();
+    const auth = await verifyApiAuth(req);
+    if (auth.error || !auth.user) {
+      return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await params;
 
     if (!id) {
@@ -21,6 +27,16 @@ export async function GET(
       return NextResponse.json({ error: 'Student not found' }, { status: 404 });
     }
 
+    if (auth.user.role === 'COUNSELOR') {
+      const userIdStr = (auth.user as any).userId?.toString();
+      const userName = (auth.user as any).name || req.cookies.get('userName')?.value;
+      const isOwner = (userIdStr && student.counselorId?.toString() === userIdStr) ||
+                      (userName && student.counselorName === userName);
+      if (!isOwner) {
+        return NextResponse.json({ error: 'Forbidden: You do not have permission to view this student record' }, { status: 403 });
+      }
+    }
+
     return NextResponse.json(student, { status: 200 });
   } catch (error: any) {
     console.error('Error fetching student:', error);
@@ -29,11 +45,16 @@ export async function GET(
 }
 
 export async function PUT(
-  req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectToDatabase();
+    const auth = await verifyApiAuth(req);
+    if (auth.error || !auth.user) {
+      return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await params;
 
     if (!id) {
@@ -44,6 +65,18 @@ export async function PUT(
     const existingStudent = await Student.findById(id);
     if (!existingStudent) {
       return NextResponse.json({ error: 'Student not found' }, { status: 404 });
+    }
+
+    if (auth.user.role === 'COUNSELOR') {
+      const userIdStr = (auth.user as any).userId?.toString();
+      const userName = (auth.user as any).name || req.cookies.get('userName')?.value;
+      const isOwner = (userIdStr && existingStudent.counselorId?.toString() === userIdStr) ||
+                      (userName && existingStudent.counselorName === userName);
+      if (!isOwner) {
+        return NextResponse.json({ error: 'Forbidden: You do not have permission to modify this student record' }, { status: 403 });
+      }
+      delete body.counselorId;
+      delete body.counselorName;
     }
 
     const currentStatus = body.status || existingStudent.status || 'Active On Call';
@@ -195,22 +228,38 @@ export async function PUT(
 }
 
 export async function DELETE(
-  req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectToDatabase();
+    const auth = await verifyApiAuth(req);
+    if (auth.error || !auth.user) {
+      return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await params;
 
     if (!id) {
       return NextResponse.json({ error: 'ID is required' }, { status: 400 });
     }
 
-    const deleted = await Student.findByIdAndDelete(id);
-
-    if (!deleted) {
+    const existingStudent = await Student.findById(id);
+    if (!existingStudent) {
       return NextResponse.json({ error: 'Student not found' }, { status: 404 });
     }
+
+    if (auth.user.role === 'COUNSELOR') {
+      const userIdStr = (auth.user as any).userId?.toString();
+      const userName = (auth.user as any).name || req.cookies.get('userName')?.value;
+      const isOwner = (userIdStr && existingStudent.counselorId?.toString() === userIdStr) ||
+                      (userName && existingStudent.counselorName === userName);
+      if (!isOwner) {
+        return NextResponse.json({ error: 'Forbidden: You do not have permission to delete this student record' }, { status: 403 });
+      }
+    }
+
+    await Student.findByIdAndDelete(id);
 
     return NextResponse.json({ message: 'Student deleted successfully' }, { status: 200 });
   } catch (error: any) {

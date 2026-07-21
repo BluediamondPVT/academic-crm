@@ -56,3 +56,19 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export async function GET() {
+  try {
+    await connectToDatabase();
+    const counselors = await User.find({ role: ROLES.COUNSELOR })
+      .select("-password")
+      .sort({ createdAt: -1 });
+    return NextResponse.json(counselors, { status: 200 });
+  } catch (error) {
+    console.error("Error fetching counselors:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch counselors" },
+      { status: 500 }
+    );
+  }
+}

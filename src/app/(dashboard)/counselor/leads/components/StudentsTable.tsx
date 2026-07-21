@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Loader2, User, Phone, Building, Eye, Mail, Edit, Trash2 } from 'lucide-react';
+import { Loader2, User, Phone, Building, Eye, Mail, Edit, Trash2, ShieldCheck, UserCheck } from 'lucide-react';
 import { StudentRecord } from '../types';
 
 interface StudentsTableProps {
@@ -65,6 +65,11 @@ export default function StudentsTable({
               <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
                 City
               </th>
+              {isAdmin && (
+                <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
+                  Entry By / Role
+                </th>
+              )}
               <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
                  Course
               </th>
@@ -82,14 +87,14 @@ export default function StudentsTable({
           <tbody className="divide-y divide-gray-100">
             {loading ? (
               <tr>
-                <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                <td colSpan={isAdmin ? 9 : 8} className="px-6 py-12 text-center text-gray-500">
                   <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-blue-500" />
                   Loading students...
                 </td>
               </tr>
             ) : students.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                <td colSpan={isAdmin ? 9 : 8} className="px-6 py-12 text-center text-gray-500">
                   <div className="max-w-xs mx-auto py-4">
                     <User className="h-10 w-10 text-gray-300 mx-auto mb-2" />
                     <p className="font-semibold text-gray-600">No students added yet</p>
@@ -118,6 +123,29 @@ export default function StudentsTable({
                       {student.city}
                     </div>
                   </td>
+                  {isAdmin && (
+                    <td className="px-4 py-4">
+                      {(!student.counselorName || student.counselorName.toLowerCase() === 'admin') ? (
+                        <div className="flex flex-col gap-1">
+                          <span className="inline-flex items-center gap-1 w-max px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 uppercase tracking-wider">
+                            <ShieldCheck className="h-3 w-3 text-purple-600" />
+                            Admin
+                          </span>
+                          <span className="text-xs font-bold text-gray-700">Super Admin</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-1">
+                          <span className="inline-flex items-center gap-1 w-max px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 uppercase tracking-wider">
+                            <UserCheck className="h-3 w-3 text-blue-600" />
+                            Counselor
+                          </span>
+                          <span className="text-xs font-bold text-[#112a46]">
+                            {student.counselorName}
+                          </span>
+                        </div>
+                      )}
+                    </td>
+                  )}
                   <td className="px-4 py-4">
                     <div className="text-xs font-bold text-[#112a46]">{student.courseName}</div>
                   </td>
@@ -131,7 +159,7 @@ export default function StudentsTable({
                     </span> 
                   </td>
                   <td className="px-4 py-4">
-                    <div className="flex flex-col gap-1 min-w-[200px] max-w-[400px]">
+                    <div className="flex flex-col gap-1 min-w-50 max-w-[400px]">
                       {student.status === 'Admission' ? (
                         <>
                           {student.remarkUpdatedAt && (student.preAdmissionRemark || student.remark) && (

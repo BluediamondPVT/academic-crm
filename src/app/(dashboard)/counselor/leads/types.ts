@@ -57,5 +57,7 @@ export interface StudentRecord {
     remark?: string;
   }[];
   status: string;
+  counselorId?: string;
+  counselorName?: string;
   createdAt: string;
 }

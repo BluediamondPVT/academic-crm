@@ -22,8 +22,14 @@ export default function ConfirmedAdmissionsPage() {
   const [students, setStudents] = useState<StudentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    const roleCookie = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('userRole='))
+      ?.split('=')[1];
+    setIsAdmin(roleCookie === 'ADMIN');
     fetchAdmissions();
   }, []);
 
@@ -106,6 +112,9 @@ export default function ConfirmedAdmissionsPage() {
                 <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Contact Details</th>
                 <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">University &amp; Course</th>
                 <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">City</th>
+                {isAdmin && (
+                  <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Entry By / Role</th>
+                )}
                 <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Remark / Notes</th>
                 <th className="px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100 text-right">Actions</th>
               </tr>
@@ -113,14 +122,14 @@ export default function ConfirmedAdmissionsPage() {
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={isAdmin ? 8 : 7} className="px-6 py-12 text-center text-gray-500">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-indigo-500" />
                     Loading admissions database...
                   </td>
                 </tr>
               ) : filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={isAdmin ? 8 : 7} className="px-6 py-12 text-center text-gray-500">
                     <div className="max-w-xs mx-auto py-4">
                       <User className="h-10 w-10 text-gray-300 mx-auto mb-2" />
                       <p className="font-semibold text-gray-600">No confirmed admissions</p>
@@ -160,6 +169,27 @@ export default function ConfirmedAdmissionsPage() {
                         {student.city}
                       </div>
                     </td>
+                    {isAdmin && (
+                      <td className="px-4 py-4">
+                        {(!student.counselorName || student.counselorName.toLowerCase() === 'admin') ? (
+                          <div className="flex flex-col gap-1">
+                            <span className="inline-flex items-center gap-1 w-max px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 uppercase tracking-wider">
+                              Admin
+                            </span>
+                            <span className="text-xs font-bold text-gray-700">Super Admin</span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col gap-1">
+                            <span className="inline-flex items-center gap-1 w-max px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 uppercase tracking-wider">
+                              Counselor
+                            </span>
+                            <span className="text-xs font-bold text-[#112a46]">
+                              {student.counselorName}
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                    )}
                     <td className="px-4 py-4">
                       <div className="flex flex-col gap-1 min-w-[150px] max-w-[300px]">
                         {student.admissionRemarkUpdatedAt && student.admissionRemark && (

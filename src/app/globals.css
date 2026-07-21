@@ -55,3 +55,29 @@ h6,
   background-size: 300% 300%;
   animation: gradient-move 15s ease infinite;
 }
+
+
+/* Custom Scrollbar Styles for Chrome, Edge, Safari, Brave & Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #dfddf0 #434857;
+}
+
+*::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #434857;
+  border-radius: 5px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(to top, #100d27, #4F39F6);
+  border-radius: 5px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to top, #1e1b4b, #6366f1);
+}

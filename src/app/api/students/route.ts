@@ -1,12 +1,42 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import Student from '@/models/Student';
 import University from '@/models/University';
+import { verifyApiAuth } from '@/utils/authGuard';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     await connectToDatabase();
-    const students = await Student.find().sort({ createdAt: -1 });
+    const auth = await verifyApiAuth(req);
+    if (auth.error || !auth.user) {
+      return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: 401 });
+    }
+
+    let filter: any = {};
+    if (auth.user.role === 'COUNSELOR') {
+      const userIdStr = (auth.user as any).userId?.toString();
+      const userName = (auth.user as any).name || req.cookies.get('userName')?.value;
+      const orConditions: any[] = [];
+      if (userIdStr) orConditions.push({ counselorId: userIdStr });
+      if (userName) orConditions.push({ counselorName: userName });
+      
+      if (orConditions.length > 0) {
+        filter = { $or: orConditions };
+      } else {
+        filter = { _id: null };
+      }
+    } else if (auth.user.role === 'ADMIN') {
+      const { searchParams } = new URL(req.url);
+      const filterCounselorId = searchParams.get('counselorId');
+      const filterCounselorName = searchParams.get('counselorName');
+      if (filterCounselorId && filterCounselorId !== 'ALL') {
+        filter.counselorId = filterCounselorId;
+      } else if (filterCounselorName && filterCounselorName !== 'ALL') {
+        filter.counselorName = filterCounselorName;
+      }
+    }
+
+    const students = await Student.find(filter).sort({ createdAt: -1 });
     return NextResponse.json(students, { status: 200 });
   } catch (error: any) {
     console.error('Error fetching students:', error);
@@ -17,9 +47,13 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     await connectToDatabase();
+    const auth = await verifyApiAuth(req);
+    if (auth.error || !auth.user) {
+      return NextResponse.json({ error: auth.error || 'Unauthorized' }, { status: 401 });
+    }
 
     const body = await req.json();
     const {
@@ -74,6 +108,17 @@ export async function POST(req: Request) {
       console.error('Error fetching university payout:', e);
     }
 
+    let assignedCounselorId = body.counselorId;
+    let assignedCounselorName = counselorName || body.counselorName;
+
+    if (auth.user.role === 'COUNSELOR') {
+      assignedCounselorId = (auth.user as any).userId?.toString();
+      assignedCounselorName = (auth.user as any).name || req.cookies.get('userName')?.value || counselorName || 'Counselor';
+    } else if (!assignedCounselorId && !assignedCounselorName) {
+      assignedCounselorId = (auth.user as any).userId?.toString();
+      assignedCounselorName = (auth.user as any).name || req.cookies.get('userName')?.value || 'Admin';
+    }
+
     const newStudent = await Student.create({
       name,
       phoneNumber,
@@ -98,7 +143,8 @@ export async function POST(req: Request) {
       remainingFee,
       payments,
       status: status || 'Active On Call',
-      counselorName,
+      counselorId: assignedCounselorId,
+      counselorName: assignedCounselorName,
       city,
     });
 

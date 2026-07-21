@@ -37,6 +37,7 @@ export interface IStudent extends Document {
     remark?: string;
   }[];
   status: string;
+  counselorId?: string;
   counselorName?: string;
   city: string;
   createdAt: Date;
@@ -87,6 +88,7 @@ const StudentSchema: Schema = new Schema(
       enum: ['New Lead', 'Active On Call', 'Visit', 'Online Counseling', 'Follow-Up', 'Processing', 'Hold', 'Lost', 'Admission'],
       default: 'New Lead',
     },
+    counselorId: { type: String, index: true },
     counselorName: { type: String },
     city:{ type: String, required:true }, 
   },
