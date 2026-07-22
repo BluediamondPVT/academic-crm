@@ -84,7 +84,7 @@ export default function ConfirmedAdmissionsPage() {
 
 
       {/* Search & Filter bar */}
-      {/* <div className="bg-white/60 backdrop-blur-lg rounded-2xl border border-gray-100/60 p-4 flex flex-col md:flex-row gap-4 items-center justify-between shadow-xs">
+      <div className="bg-white/60 backdrop-blur-lg rounded-2xl border border-gray-100/60 p-4 flex flex-col md:flex-row gap-4 items-center justify-between shadow-xs">
         <div className="relative w-full md:w-80">
           <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
@@ -99,7 +99,7 @@ export default function ConfirmedAdmissionsPage() {
           <span>Displaying Confirmed:</span>
           <span className="text-emerald-600 font-extrabold">{filteredStudents.length} Records</span>
         </div>
-      </div> */}
+      </div>
 
       {/* Admissions Table */}
       <div className="bg-white rounded-2xl shadow-xs border border-gray-100 overflow-hidden">
