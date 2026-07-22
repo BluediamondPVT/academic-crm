@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Jost, Poppins } from "next/font/google";
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import "./globals.css";
 
 const jost = Jost({
@@ -28,7 +29,10 @@ export default function RootLayout({
       lang="en"
       className={`${jost.variable} ${poppins.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <SpeedInsights />
+      </body>
     </html>
   );
 }
