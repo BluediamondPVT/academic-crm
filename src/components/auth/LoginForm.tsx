@@ -65,7 +65,7 @@ export default function LoginForm() {
       </div>
 
       {/* Demo Credentials Box */}
-      <div className="bg-slate-50/80 backdrop-blur-sm border border-slate-200/60 rounded-xl p-4 space-y-2.5">
+      {/* <div className="bg-slate-50/80 backdrop-blur-sm border border-slate-200/60 rounded-xl p-4 space-y-2.5">
         <div className="flex items-center space-x-2 text-xs font-semibold text-slate-700">
           <Info size={14} className="text-indigo-600 animate-pulse" />
           <span>DEMO CREDENTIALS (CLICK TO AUTO-FILL)</span>
@@ -88,7 +88,7 @@ export default function LoginForm() {
             <span className="text-[10px] text-slate-500 font-mono mt-0.5 select-all">counselor@bditacademic.com</span>
           </button>
         </div>
-      </div>
+      </div> */}
 
       {error && (
         <div className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">

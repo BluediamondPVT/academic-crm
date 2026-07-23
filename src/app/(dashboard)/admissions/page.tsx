@@ -13,7 +13,8 @@ import {
   CheckCircle2, 
   DollarSign,
   ArrowRight,
-  TrendingUp
+  TrendingUp,
+  ChevronDown
 } from 'lucide-react';
 import Link from 'next/link';
 import { StudentRecord } from '../counselor/leads/types';
@@ -22,6 +23,8 @@ export default function ConfirmedAdmissionsPage() {
   const [students, setStudents] = useState<StudentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUniversity, setSelectedUniversity] = useState<string>('all');
+  const [selectedCounselor, setSelectedCounselor] = useState<string>('all');
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -54,15 +57,33 @@ export default function ConfirmedAdmissionsPage() {
     }
   };
 
-  // Filter students based on search term
-  const filteredStudents = students.filter(student => {
-    return (
+  // Unique list of universities and counselors for filter dropdowns
+  const availableUniversities = Array.from(
+    new Set(students.map((s) => s.universityName).filter(Boolean))
+  ).sort();
+
+  const availableCounselors = Array.from(
+    new Set(students.map((s) => s.counselorName).filter(Boolean) as string[])
+  ).sort();
+
+  // Filter students based on search term, university, and counselor
+  const filteredStudents = students.filter((student) => {
+    const matchesSearch =
       student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.phoneNumber.includes(searchTerm) ||
       student.courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.universityName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.city.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+      student.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (student.counselorName &&
+        student.counselorName.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    const matchesUniversity =
+      selectedUniversity === 'all' || student.universityName === selectedUniversity;
+
+    const matchesCounselor =
+      selectedCounselor === 'all' || student.counselorName === selectedCounselor;
+
+    return matchesSearch && matchesUniversity && matchesCounselor;
   });
 
   // Calculate total fee of all admissions
@@ -86,18 +107,58 @@ export default function ConfirmedAdmissionsPage() {
 
 
       {/* Search & Filter bar */}
-      <div className="bg-white/60 backdrop-blur-lg rounded-2xl border border-gray-100/60 p-4 flex flex-col md:flex-row gap-4 items-center justify-between shadow-xs">
-        <div className="relative w-full md:w-80">
-          <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by name, course, university..."
-            className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium transition-all bg-white"
-          />
+      <div className="bg-white/60 backdrop-blur-lg rounded-2xl border border-gray-100/60 p-4 flex flex-col md:flex-row gap-3 items-center justify-between shadow-xs">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full md:w-auto flex-1 items-center">
+          {/* Search Input */}
+          <div className="relative w-full sm:w-64">
+            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by name, course, university..."
+              className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium transition-all bg-white"
+            />
+          </div>
+
+          {/* University Filter Dropdown */}
+          <div className="relative w-full sm:w-52">
+            <Building className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <select
+              value={selectedUniversity}
+              onChange={(e) => setSelectedUniversity(e.target.value)}
+              className="w-full pl-9 pr-8 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium transition-all bg-white appearance-none cursor-pointer text-gray-700"
+            >
+              <option value="all">All Universities</option>
+              {availableUniversities.map((uni) => (
+                <option key={uni} value={uni}>
+                  {uni}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="h-4 w-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          </div>
+
+          {/* Counselor Filter Dropdown */}
+          <div className="relative w-full sm:w-48">
+            <User className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <select
+              value={selectedCounselor}
+              onChange={(e) => setSelectedCounselor(e.target.value)}
+              className="w-full pl-9 pr-8 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium transition-all bg-white appearance-none cursor-pointer text-gray-700"
+            >
+              <option value="all">All Counselors</option>
+              {availableCounselors.map((counselor) => (
+                <option key={counselor} value={counselor}>
+                  {counselor}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="h-4 w-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          </div>
         </div>
-        <div className="text-xs font-bold text-slate-500 bg-white border border-gray-150 px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-2xs">
+
+        <div className="text-xs font-bold text-slate-500 bg-white border border-gray-150 px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-2xs shrink-0 w-full md:w-auto justify-center">
           <span>Displaying Confirmed:</span>
           <span className="text-emerald-600 font-extrabold">{filteredStudents.length} Records</span>
         </div>

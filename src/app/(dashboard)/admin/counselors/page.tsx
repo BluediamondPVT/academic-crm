@@ -213,7 +213,7 @@ export default function CreateCounselorPage() {
         </div>
 
         {/* Right Card: List of Existing Counselors */}
-        {/* <div className="lg:col-span-7 bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-gray-100 overflow-hidden">
+         <div className="lg:col-span-7 bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-gray-100 overflow-hidden">
           <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-6">
             <div className="flex items-center gap-2.5">
               <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600">
@@ -286,7 +286,7 @@ export default function CreateCounselorPage() {
               ))}
             </div>
           )}
-        </div> */}
+        </div> 
       </div>
     </div>
   );
