@@ -60,4 +60,5 @@ export interface StudentRecord {
   counselorId?: string;
   counselorName?: string;
   createdAt: string;
+  updatedAt?: string;
 }

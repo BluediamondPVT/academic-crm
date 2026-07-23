@@ -43,7 +43,7 @@ export default function ConfirmedAdmissionsPage() {
         const admissions = (Array.isArray(data) ? data : [])
           .filter((s: StudentRecord) => s.status === 'Admission')
           .sort((a: StudentRecord, b: StudentRecord) => 
-            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+            new Date(b.updatedAt || b.createdAt || 0).getTime() - new Date(a.updatedAt || a.createdAt || 0).getTime()
           );
         setStudents(admissions);
       }
