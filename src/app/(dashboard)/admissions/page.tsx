@@ -25,7 +25,10 @@ export default function ConfirmedAdmissionsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUniversity, setSelectedUniversity] = useState<string>('all');
   const [selectedCounselor, setSelectedCounselor] = useState<string>('all');
+  const [sessionFilter, setSessionFilter] = useState('');
+  const [dueDateFilter, setDueDateFilter] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
+
 
   useEffect(() => {
     const roleCookie = document.cookie
@@ -56,7 +59,6 @@ export default function ConfirmedAdmissionsPage() {
       setLoading(false);
     }
   };
-
   // Unique list of universities and counselors for filter dropdowns
   const availableUniversities = Array.from(
     new Set(students.map((s) => s.universityName).filter(Boolean))
@@ -83,11 +85,72 @@ export default function ConfirmedAdmissionsPage() {
     const matchesCounselor =
       selectedCounselor === 'all' || student.counselorName === selectedCounselor;
 
-    return matchesSearch && matchesUniversity && matchesCounselor;
+    const matchesSession = 
+      sessionFilter === '' || sessionFilter === 'All Sessions' || student.session === sessionFilter;
+
+    let matchesDueDate = true;
+    if (dueDateFilter && dueDateFilter !== 'All Due Status') {
+      const nextDue = student.nextDueDate || (student.payments && student.payments.length > 0 ? student.payments[student.payments.length - 1]?.nextDueDate : undefined);
+      if (!nextDue) {
+        matchesDueDate = dueDateFilter === 'Safe / Paid';
+      } else {
+        const dueDate = new Date(nextDue);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        dueDate.setHours(0, 0, 0, 0);
+
+        const diffTime = dueDate.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (dueDateFilter === 'Overdue (Red)') {
+          matchesDueDate = diffDays <= 0;
+        } else if (dueDateFilter === 'Upcoming 30 Days (Yellow)') {
+          matchesDueDate = diffDays > 0 && diffDays <= 30;
+        } else if (dueDateFilter === 'Safe / Paid') {
+          matchesDueDate = diffDays > 30;
+        }
+      }
+    }
+
+    return matchesSearch && matchesUniversity && matchesCounselor && matchesSession && matchesDueDate;
   });
 
   // Calculate total fee of all admissions
   const totalRevenue = students.reduce((acc, curr) => acc + (curr.totalFee || 0), 0);
+
+  // Helper function to calculate due date alert highlight style
+  const getDueDateRowClass = (dueDateStr?: string) => {
+    if (!dueDateStr) return '';
+
+    const dueDate = new Date(dueDateStr);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    dueDate.setHours(0, 0, 0, 0);
+
+    const diffTime = dueDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays <= 0) {
+      // Date is passed or today (0 or negative days left)
+      return 'bg-red-50/80 hover:bg-red-100';
+    } else if (diffDays <= 30) {
+      // Date is within the next 30 days
+      return 'bg-amber-50/80 hover:bg-amber-100';
+    }
+
+    return '';
+  };
+
+  const formatDueDate = (dateStr?: string) => {
+    if (!dateStr) return 'N/A';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return 'N/A';
+    return d.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
 
   return (
     <div className="space-y-6 font-sans  text-gray-800">
@@ -156,6 +219,35 @@ export default function ConfirmedAdmissionsPage() {
             </select>
             <ChevronDown className="h-4 w-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
           </div>
+
+          {/* Session Filter Dropdown */}
+          <div className="relative w-full sm:w-40">
+            <select
+              value={sessionFilter}
+              onChange={(e) => setSessionFilter(e.target.value)}
+              className="w-full pl-4 pr-8 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium transition-all bg-white appearance-none cursor-pointer text-gray-700"
+            >
+              <option value="">All Sessions</option>
+              <option value="January">January</option>
+              <option value="July">July</option>
+            </select>
+            <ChevronDown className="h-4 w-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          </div>
+
+          {/* Due Date Filter Dropdown */}
+          <div className="relative w-full sm:w-56">
+            <select
+              value={dueDateFilter}
+              onChange={(e) => setDueDateFilter(e.target.value)}
+              className="w-full pl-4 pr-8 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium transition-all bg-white appearance-none cursor-pointer text-gray-700"
+            >
+              <option value="">All Due Status</option>
+              <option value="Overdue (Red)">Overdue (Red)</option>
+              <option value="Upcoming 30 Days (Yellow)">Upcoming 30 Days (Yellow)</option>
+              <option value="Safe / Paid">Safe / Paid</option>
+            </select>
+            <ChevronDown className="h-4 w-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          </div>
         </div>
 
         <div className="text-xs font-bold text-slate-500 bg-white border border-gray-150 px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-2xs shrink-0 w-full md:w-auto justify-center">
@@ -180,7 +272,7 @@ export default function ConfirmedAdmissionsPage() {
                 <th className="px-2 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Rest</th>
                 {isAdmin && (
                   <>
-                    <th className="px-2 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Profit</th>
+                    {/* <th className="px-2 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Profit</th> */}
                     <th className="px-2 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Univ Amt</th>
                     <th className="px-2 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Entry By</th>
                   </>
@@ -192,14 +284,14 @@ export default function ConfirmedAdmissionsPage() {
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan={isAdmin ? 13 : 10} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={isAdmin ? 15 : 12} className="px-6 py-12 text-center text-gray-500">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-indigo-500" />
                     Loading admissions database...
                   </td>
                 </tr>
               ) : filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdmin ? 13 : 10} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={isAdmin ? 15 : 12} className="px-6 py-12 text-center text-gray-500">
                     <div className="max-w-xs mx-auto py-4">
                       <User className="h-10 w-10 text-gray-300 mx-auto mb-2" />
                       <p className="font-semibold text-gray-600">No confirmed admissions</p>
@@ -216,8 +308,12 @@ export default function ConfirmedAdmissionsPage() {
                   const restFee = student.remainingFee !== undefined ? student.remainingFee : Math.max(0, (student.totalFee || 0) - (student.totalPaid || 0));
                   const isPaidInFull = restFee === 0 && (student.totalFee || 0) > 0;
 
+                  const nextDue = student.nextDueDate || (student.payments && student.payments.length > 0 ? student.payments[student.payments.length - 1]?.nextDueDate : undefined);
+                  const dueDateClass = getDueDateRowClass(nextDue);
+                  const rowBgClass = dueDateClass || (isPaidInFull ? 'bg-emerald-50/60 hover:bg-emerald-100/60' : 'hover:bg-gray-50/50');
+
                   return (
-                  <tr key={student._id} className={`${isPaidInFull ? 'bg-emerald-50/60 hover:bg-emerald-100/60' : 'hover:bg-gray-50/50'} transition-colors`}>
+                  <tr key={student._id} className={`${rowBgClass} transition-colors`}>
                     <td className="px-2 py-3 text-xs text-gray-500 font-semibold">{index + 1}</td>
                     <td className="px-2 py-3">
                       <div className="text-[11px] font-bold text-[#112a46]">{student.name}</div>
@@ -264,11 +360,11 @@ export default function ConfirmedAdmissionsPage() {
 
                     {isAdmin && (
                       <>
-                        <td className="px-2 py-3">
+                        {/* <td className="px-2 py-3">
                           <div className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md inline-block whitespace-nowrap">
                             ₹{profit.toLocaleString('en-IN')}
                           </div>
-                        </td>
+                        </td> */}
                         <td className="px-2 py-3">
                           <div className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md inline-block whitespace-nowrap">
                             ₹{univAmt.toLocaleString('en-IN')}
@@ -342,6 +438,7 @@ export default function ConfirmedAdmissionsPage() {
           </table>
         </div>
       </div>
+
     </div>
   );
 }

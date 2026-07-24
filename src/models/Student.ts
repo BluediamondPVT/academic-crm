@@ -40,6 +40,8 @@ export interface IStudent extends Document {
   counselorId?: string;
   counselorName?: string;
   city: string;
+  session?: string;
+  nextDueDate?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -90,7 +92,9 @@ const StudentSchema: Schema = new Schema(
     },
     counselorId: { type: String, index: true },
     counselorName: { type: String },
-    city:{ type: String, required:true }, 
+    city:{ type: String, required:true },
+    session: { type: String },
+    nextDueDate: { type: Date },
   },
   { timestamps: true }
 );

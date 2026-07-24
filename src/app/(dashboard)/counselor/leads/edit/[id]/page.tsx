@@ -40,6 +40,7 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
     email: '',
     remark: '',
     city: '',
+    session: '',
     status: 'New Lead',
     universityId: '',
     courseIndex: '',
@@ -107,6 +108,7 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
           email: data.email || '',
           remark: data.status === 'Admission' ? (data.admissionRemark || '') : (data.remark || ''),
           city: data.city || '',
+          session: data.session || '',
           status: data.status || 'New Lead',
           universityId: data.universityId || '',
           courseIndex: courseIdx >= 0 ? String(courseIdx) : '',
@@ -224,9 +226,13 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
         payload.semesterFee = selectedCourse.semesterFee;
       }
 
-      if (formData.status === 'Processing' || formData.status === 'Admission') {
+      // STRICT CONDITION: Only process and send payments if status is 'Admission'
+      if (formData.status === 'Admission') {
         const paidVal = Number(amountPaid) || 0;
         payload.totalPaid = (student?.totalPaid || 0) + paidVal;
+        payload.session = formData.session;
+        payload.payoutPercentage = Number(payoutPercentage) || 0;
+        
         if (paidVal > 0) {
           payload.paymentTransaction = {
             paymentType,
@@ -235,9 +241,11 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
             nextDueDate: nextDueDate ? new Date(nextDueDate).toISOString() : undefined,
           };
         }
-        if (formData.status === 'Admission') {
-          payload.payoutPercentage = Number(payoutPercentage) || 0;
-        }
+      } else {
+        // Explicitly omit or zero out payment and admission-specific fields to prevent false logs
+        payload.session = '';
+        payload.payoutPercentage = 0;
+        // paymentTransaction is intentionally omitted so the backend ignores it
       }
 
       const res = await fetch(`/api/students/${studentId}`, {
@@ -492,8 +500,8 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
                   </div>
                 </div>
 
-                {/* Row 2: Email, Status (2 inputs) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Row 2: Email, Admission Session, Status */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {/* Email field */}
                   <div>
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
@@ -513,6 +521,24 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
                         <Lock className="h-3.5 w-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
                       )}
                     </div>
+                  </div>
+
+                  {/* Admission Session field */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                      Admission Session <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="session"
+                      required
+                      value={formData.session}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium transition-all bg-white"
+                    >
+                      <option value="">Select Session</option>
+                      <option value="January">January</option>
+                      <option value="July">July</option>
+                    </select>
                   </div>
 
                   {/* Status selection */}
@@ -619,7 +645,6 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
                       </div>
                     </div>
 
-                    {paymentType === 'Custom' && (
                       <div>
                         <label className="block text-xs font-bold text-gray-600 mb-1">
                           Next Due Date
@@ -631,7 +656,6 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
                           className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
                         />
                       </div>
-                    )}
 
                     {/* Inline Summary */}
                     {(() => {

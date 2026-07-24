@@ -33,6 +33,7 @@ export default function EditStudentModal({
     email: '',
     remark: '',
     city: '',
+    session: '',
     status: 'New Lead',
   });
 
@@ -55,6 +56,7 @@ export default function EditStudentModal({
         email: student.email || '',
         remark: student.remark || '',
         city: student.city || '',
+        session: student.session || '',
         status: student.status || 'New Lead',
       });
       setPayoutPercentage(student.payoutPercentage !== undefined ? student.payoutPercentage : '');
@@ -120,6 +122,7 @@ export default function EditStudentModal({
         email: formData.email.trim(),
         remark: formData.remark,
         city: formData.city.trim(),
+        session: formData.session,
         status: formData.status,
       };
 
@@ -277,6 +280,23 @@ export default function EditStudentModal({
                   />
                 </div>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                Admission Session <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="session"
+                required
+                value={formData.session}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium bg-white"
+              >
+                <option value="">Select Session</option>
+                <option value="January">January</option>
+                <option value="July">July</option>
+              </select>
             </div>
 
             <div>

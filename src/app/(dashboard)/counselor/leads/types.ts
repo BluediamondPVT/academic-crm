@@ -41,6 +41,8 @@ export interface StudentRecord {
   courseName: string;
   specialization?: string;
   city: string;
+  session?: string;
+  nextDueDate?: string;
   duration?: number;
   totalFee?: number;
   yearFee?: number;
