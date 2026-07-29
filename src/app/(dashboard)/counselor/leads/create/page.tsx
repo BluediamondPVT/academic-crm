@@ -187,16 +187,16 @@ export default function CreateLeadPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-8">
-            
+
             {/* Section 1: Enquiry Details */}
             <div>
               <h3 className="text-base font-bold text-slate-800 pb-2 border-b border-slate-100 mb-4">
                 Enquiry Details
               </h3>
-              
+
               {/* Enquiry Form Fields */}
               <div className="space-y-6">
-                
+
                 {/* Row 1: Name, Phone, City (3 inputs) */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {/* Name field */}
@@ -257,7 +257,7 @@ export default function CreateLeadPage() {
                     <input
                       type="email"
                       name="email"
-                      required
+
                       value={formData.email}
                       onChange={handleInputChange}
                       placeholder="Enter Email Address"
@@ -283,7 +283,7 @@ export default function CreateLeadPage() {
                       <option value="Follow-Up">Follow-Up</option>
                       <option value="Processing">Processing</option>
                       <option value="Hold">Hold</option>
-                      
+
                       <option value="Lost">Lost</option>
                       <option value="Admission">Admission</option>
                     </select>
@@ -324,9 +324,8 @@ export default function CreateLeadPage() {
                       disabled={!selectedUniversity}
                       value={formData.courseIndex}
                       onChange={handleInputChange}
-                      className={`w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-slate-400 font-semibold text-gray-800 transition-all ${
-                        !selectedUniversity ? 'bg-gray-100 text-gray-400' : 'bg-white'
-                      }`}
+                      className={`w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-slate-400 font-semibold text-gray-800 transition-all ${!selectedUniversity ? 'bg-gray-100 text-gray-400' : 'bg-white'
+                        }`}
                     >
                       <option value="">
                         {selectedUniversity
