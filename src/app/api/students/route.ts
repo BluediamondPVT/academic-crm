@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
     } = body;
 
     // Validate required fields
-    if (!name || !phoneNumber || !universityId || !universityName || !courseName || !city) {
+    if (!name || !phoneNumber || !universityId || !universityName || !courseName) {
       return NextResponse.json(
         { error: 'Name, Phone Number, University, and Course are required fields.' },
         { status: 400 }

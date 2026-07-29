@@ -234,12 +234,11 @@ export default function CreateLeadPage() {
                   {/* City */}
                   <div>
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                      City <span className="text-red-500">*</span>
+                      City
                     </label>
                     <input
                       type="text"
                       name="city"
-                      required
                       value={formData.city}
                       onChange={handleInputChange}
                       placeholder="Enter City"

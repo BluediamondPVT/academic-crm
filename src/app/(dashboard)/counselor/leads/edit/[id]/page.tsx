@@ -480,12 +480,11 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
                   {/* City field */}
                   <div>
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                      City <span className="text-red-500">*</span>
+                      City
                     </label>
                     <div className="relative">
                       <input
                         name="city"
-                        required
                         disabled={isCityDisabled}
                         value={formData.city}
                         onChange={handleInputChange}

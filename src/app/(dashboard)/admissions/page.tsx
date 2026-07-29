@@ -75,7 +75,7 @@ export default function ConfirmedAdmissionsPage() {
       student.phoneNumber.includes(searchTerm) ||
       student.courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.universityName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (student.city && student.city.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (student.counselorName &&
         student.counselorName.toLowerCase().includes(searchTerm.toLowerCase()));
 

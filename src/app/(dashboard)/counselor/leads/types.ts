@@ -40,7 +40,7 @@ export interface StudentRecord {
   universityName: string;
   courseName: string;
   specialization?: string;
-  city: string;
+  city?: string;
   session?: string;
   nextDueDate?: string;
   duration?: number;

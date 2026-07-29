@@ -314,13 +314,12 @@ export default function AddStudentModal({
 
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                    Enter City <span className="text-red-500">*</span>
+                    Enter City
                   </label>
                   <div className="relative">
                     <Landmark className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                       name="city"
-                      required
                       value={formData.city}
                       onChange={handleInputChange}
                       placeholder="e.g. Mumbai"

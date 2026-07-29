@@ -62,7 +62,7 @@ export default function CounselorStudentsPage() {
       student.phoneNumber.includes(searchTerm) ||
       student.courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.universityName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.city.toLowerCase().includes(searchTerm.toLowerCase());
+      (student.city && student.city.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesUniversity =
       filterUniversity === 'ALL' || student.universityId === filterUniversity;
