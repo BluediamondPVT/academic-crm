@@ -23,15 +23,18 @@ export async function PUT(
       return NextResponse.json({ error: "Counselor not found" }, { status: 404 });
     }
 
-    if (email && email !== user.email) {
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return NextResponse.json(
-          { error: "A user with this email already exists" },
-          { status: 409 }
-        );
+    if (email) {
+      const sanitizedEmail = email.trim().toLowerCase();
+      if (sanitizedEmail !== user.email) {
+        const existingUser = await User.findOne({ email: sanitizedEmail });
+        if (existingUser) {
+          return NextResponse.json(
+            { error: "A user with this email already exists" },
+            { status: 409 }
+          );
+        }
+        user.email = sanitizedEmail;
       }
-      user.email = email;
     }
 
     if (name) {

@@ -19,8 +19,11 @@ export async function POST(req: Request) {
       return sendError("Email and password are required", 400);
     }
 
+    // Trim and lowercase email
+    const sanitizedEmail = email.trim().toLowerCase();
+
     // 2. Find user by email and select password explicitly
-    const user = await User.findOne({ email }).select("+password");
+    const user = await User.findOne({ email: sanitizedEmail }).select("+password");
 
     if (!user) {
       return sendError("Invalid email or password", 401);

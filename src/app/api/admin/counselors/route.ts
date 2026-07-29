@@ -18,7 +18,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const existingUser = await User.findOne({ email });
+    // Trim and lowercase email
+    const sanitizedEmail = email.trim().toLowerCase();
+
+    const existingUser = await User.findOne({ email: sanitizedEmail });
     if (existingUser) {
       return NextResponse.json(
         { error: "A user with this email already exists" },
@@ -31,7 +34,7 @@ export async function POST(request: Request) {
 
     const newUser = await User.create({
       name,
-      email,
+      email: sanitizedEmail,
       password: hashedPassword,
       role: ROLES.COUNSELOR,
     });

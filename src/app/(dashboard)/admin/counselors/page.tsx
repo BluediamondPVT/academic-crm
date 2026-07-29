@@ -253,6 +253,9 @@ export default function CreateCounselorPage() {
                   name="email"
                   type="email"
                   required
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   value={formData.email}
                   onChange={handleChange}
                   className="block w-full rounded-xl border border-gray-200 py-2.5 pl-10 text-sm text-slate-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 font-medium transition-all"
@@ -463,6 +466,9 @@ export default function CreateCounselorPage() {
                   <input
                     type="email"
                     required
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     value={editFormData.email}
                     onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
                     className="w-full rounded-xl border border-gray-200 py-2.5 pl-9 pr-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-600 font-medium"

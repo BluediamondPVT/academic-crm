@@ -111,6 +111,9 @@ export default function LoginForm() {
               type="email"
               name="email"
               required
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
               value={formData.email}
               onChange={handleChange}
               placeholder="name@company.com"
