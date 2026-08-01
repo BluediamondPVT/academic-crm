@@ -257,7 +257,6 @@ export default function CreateLeadPage() {
                     <input
                       type="email"
                       name="email"
-
                       value={formData.email}
                       onChange={handleInputChange}
                       placeholder="Enter Email Address"
