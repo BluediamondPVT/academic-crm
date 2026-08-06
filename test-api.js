@@ -8,7 +8,7 @@ fetch("http://localhost:3001/api/leads/external", {
     name: "Test Node",
     phoneNumber: "1122334455",
     email: "test@test.com",
-    courseName: "BBA"
+    courseName: "BBA" 
   })
 })
 .then(async r => {
