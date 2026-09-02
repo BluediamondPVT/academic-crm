@@ -37,10 +37,10 @@ export function proxy(request: NextRequest) {
     // 🔒 ACADEMIC ROLE SECURITY:
     // Academic team Dashboard (/academic), Admissions (/admissions), Universities (/admin/universities), 
     // Leads (/admin/students), aur lead view/create/edit access kar sakti hai.
-    // Lekin Staff Management (/admin/counselors), Admin Home (/admin), aur Counselor Dashboard (/counselor) prohibited hain.
+    // Lekin Staff Management (/admin/staff, /admin/counselors), Admin Home (/admin), aur Counselor Dashboard (/counselor) prohibited hain.
     if (userRole === ROLES.ACADEMIC) {
       // Prohibit Admin Home & Staff Management
-      if (pathname === '/admin' || pathname.startsWith('/admin/counselors')) {
+      if (pathname === '/admin' || pathname.startsWith('/admin/staff') || pathname.startsWith('/admin/counselors')) {
         return NextResponse.redirect(new URL('/academic', request.url));
       }
       // Prohibit Counselor base Dashboard

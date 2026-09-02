@@ -56,7 +56,7 @@ export default function Sidebar({ role }: SidebarProps) {
     
     // 🔥 Admin Only Tabs
     ...(role === "ADMIN" ? [
-      { name: "Counselors", href: "/admin/counselors", icon: Users },
+      { name: "Staff", href: "/admin/staff", icon: Users },
       { name: "Universities", href: "/admin/universities", icon: GraduationCap },
       { name: "Leads", href: "/admin/students", icon: Headset },
       { name: "Admission", href: "/admissions", icon: Users }

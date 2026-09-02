@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, Eye, EyeOff, Loader2, Info } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -50,11 +50,6 @@ export default function LoginForm() {
     }
   };
 
-  const handleFillCredentials = (email: string) => {
-    setFormData({ email, password: "password123" });
-    setError("");
-  };
-
   return (
     <div className="w-full max-w-md space-y-6">
       <div className="flex flex-col space-y-2 text-center">
@@ -64,40 +59,6 @@ export default function LoginForm() {
         <p className="text-sm text-slate-500">
           Please enter your details to sign in to your account.
         </p>
-      </div>
-
-      {/* Demo Credentials Box */}
-      <div className="bg-slate-50/80 backdrop-blur-sm border border-slate-200/60 rounded-xl p-4 space-y-2.5">
-        <div className="flex items-center space-x-2 text-xs font-semibold text-slate-700">
-          <Info size={14} className="text-indigo-600 animate-pulse" />
-          <span>DEMO CREDENTIALS (CLICK TO AUTO-FILL)</span>
-        </div>
-        <div className="grid grid-cols-3 gap-2 text-xs">
-          <button
-            type="button"
-            onClick={() => handleFillCredentials("admin@bditacademic.com")}
-            className="flex flex-col items-start p-2 bg-white border border-slate-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50/40 active:bg-indigo-50 transition-all cursor-pointer text-left group"
-          >
-            <span className="font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors text-xs">Admin</span>
-            <span className="text-[9px] text-slate-500 font-mono mt-0.5 truncate w-full select-all">admin@bdit...</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => handleFillCredentials("counselor@bditacademic.com")}
-            className="flex flex-col items-start p-2 bg-white border border-slate-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50/40 active:bg-indigo-50 transition-all cursor-pointer text-left group"
-          >
-            <span className="font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors text-xs">Counselor</span>
-            <span className="text-[9px] text-slate-500 font-mono mt-0.5 truncate w-full select-all">counselor@bdit...</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => handleFillCredentials("academic@bditacademic.com")}
-            className="flex flex-col items-start p-2 bg-white border border-slate-200 rounded-lg hover:border-purple-500 hover:bg-purple-50/40 active:bg-purple-50 transition-all cursor-pointer text-left group"
-          >
-            <span className="font-semibold text-slate-800 group-hover:text-purple-600 transition-colors text-xs">Academic</span>
-            <span className="text-[9px] text-slate-500 font-mono mt-0.5 truncate w-full select-all">academic@bdit...</span>
-          </button>
-        </div>
       </div>
 
       {error && (
