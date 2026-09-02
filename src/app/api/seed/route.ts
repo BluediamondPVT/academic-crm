@@ -9,36 +9,58 @@ export async function GET() {
   try {
     await connectToDatabase();
 
-    // Check if demo users already exist
+    const hashedPassword = await bcrypt.hash("password123", 10);
+    const results: string[] = [];
+
+    // 1. Admin User
     const adminExists = await User.findOne({ email: "admin@bditacademic.com" });
-    
-    if (adminExists) {
-        return NextResponse.json({ message: "Database already seeded!" });
+    if (!adminExists) {
+      await User.create({
+        name: "Super Admin",
+        email: "admin@bditacademic.com",
+        password: hashedPassword,
+        role: ROLES.ADMIN,
+        isActive: true,
+      });
+      results.push("Super Admin created");
+    } else {
+      results.push("Super Admin already exists");
     }
 
-    // Encrypt the password once
-    const hashedPassword = await bcrypt.hash("password123", 10);
+    // 2. Counselor User
+    const counselorExists = await User.findOne({ email: "counselor@bditacademic.com" });
+    if (!counselorExists) {
+      await User.create({
+        name: "Test Counselor",
+        email: "counselor@bditacademic.com",
+        password: hashedPassword,
+        role: ROLES.COUNSELOR,
+        isActive: true,
+      });
+      results.push("Test Counselor created");
+    } else {
+      results.push("Test Counselor already exists");
+    }
 
-    // Create Admin User
-    await User.create({
-      name: "Super Admin",
-      email: "admin@bditacademic.com",
-      password: hashedPassword,
-      role: ROLES.ADMIN,
-      isActive: true,
+    // 3. Academic User
+    const academicExists = await User.findOne({ email: "academic@bditacademic.com" });
+    if (!academicExists) {
+      await User.create({
+        name: "Academic Team",
+        email: "academic@bditacademic.com",
+        password: hashedPassword,
+        role: ROLES.ACADEMIC,
+        isActive: true,
+      });
+      results.push("Academic Team created");
+    } else {
+      results.push("Academic Team already exists");
+    }
+
+    return NextResponse.json({
+      message: "Database seed completed!",
+      details: results,
     });
-
-    // Create Counselor User
-    await User.create({
-      name: "Test Counselor",
-      email: "counselor@bditacademic.com",
-      password: hashedPassword,
-      role: ROLES.COUNSELOR,
-      isActive: true,
-    });
-
-    return NextResponse.json({ message: "Database successfully seeded with demo users!" });
-
   } catch (error: any) {
     console.error("Seeding Error:", error);
     return NextResponse.json({ error: "Failed to seed database" }, { status: 500 });

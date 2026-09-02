@@ -34,6 +34,8 @@ export default function LoginForm() {
         const userRole = data.data.role;
         if (userRole === "ADMIN") {
           router.push("/admin");
+        } else if (userRole === "ACADEMIC") {
+          router.push("/academic");
         } else {
           router.push("/counselor");
         }
@@ -65,30 +67,38 @@ export default function LoginForm() {
       </div>
 
       {/* Demo Credentials Box */}
-      {/* <div className="bg-slate-50/80 backdrop-blur-sm border border-slate-200/60 rounded-xl p-4 space-y-2.5">
+      <div className="bg-slate-50/80 backdrop-blur-sm border border-slate-200/60 rounded-xl p-4 space-y-2.5">
         <div className="flex items-center space-x-2 text-xs font-semibold text-slate-700">
           <Info size={14} className="text-indigo-600 animate-pulse" />
           <span>DEMO CREDENTIALS (CLICK TO AUTO-FILL)</span>
         </div>
-        <div className="grid grid-cols-2 gap-2 text-xs">
+        <div className="grid grid-cols-3 gap-2 text-xs">
           <button
             type="button"
             onClick={() => handleFillCredentials("admin@bditacademic.com")}
-            className="flex flex-col items-start p-2.5 bg-white border border-slate-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50/40 active:bg-indigo-50 transition-all cursor-pointer text-left group"
+            className="flex flex-col items-start p-2 bg-white border border-slate-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50/40 active:bg-indigo-50 transition-all cursor-pointer text-left group"
           >
-            <span className="font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors">Admin</span>
-            <span className="text-[10px] text-slate-500 font-mono mt-0.5 select-all">admin@bditacademic.com</span>
+            <span className="font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors text-xs">Admin</span>
+            <span className="text-[9px] text-slate-500 font-mono mt-0.5 truncate w-full select-all">admin@bdit...</span>
           </button>
           <button
             type="button"
             onClick={() => handleFillCredentials("counselor@bditacademic.com")}
-            className="flex flex-col items-start p-2.5 bg-white border border-slate-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50/40 active:bg-indigo-50 transition-all cursor-pointer text-left group"
+            className="flex flex-col items-start p-2 bg-white border border-slate-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50/40 active:bg-indigo-50 transition-all cursor-pointer text-left group"
           >
-            <span className="font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors">Counselor</span>
-            <span className="text-[10px] text-slate-500 font-mono mt-0.5 select-all">counselor@bditacademic.com</span>
+            <span className="font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors text-xs">Counselor</span>
+            <span className="text-[9px] text-slate-500 font-mono mt-0.5 truncate w-full select-all">counselor@bdit...</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleFillCredentials("academic@bditacademic.com")}
+            className="flex flex-col items-start p-2 bg-white border border-slate-200 rounded-lg hover:border-purple-500 hover:bg-purple-50/40 active:bg-purple-50 transition-all cursor-pointer text-left group"
+          >
+            <span className="font-semibold text-slate-800 group-hover:text-purple-600 transition-colors text-xs">Academic</span>
+            <span className="text-[9px] text-slate-500 font-mono mt-0.5 truncate w-full select-all">academic@bdit...</span>
           </button>
         </div>
-      </div> */}
+      </div>
 
       {error && (
         <div className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">

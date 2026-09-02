@@ -1,405 +1,543 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { 
-  User, 
-  UserPlus, 
-  Mail, 
-  Lock, 
-  Loader2, 
-  CheckCircle2, 
-  AlertCircle, 
-  Users, 
-  Calendar, 
-  ShieldCheck,
-  Edit,
+import React, { useState, useEffect } from 'react';
+import {
+  Users,
+  UserPlus,
+  Mail,
+  Lock,
+  User,
   Trash2,
+  Edit,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
   X,
-  AlertTriangle,
-  Key
-} from "lucide-react";
+  Key,
+  Shield,
+  GraduationCap,
+  Headset,
+  Search,
+  Filter,
+  AlertTriangle
+} from 'lucide-react';
+import { ROLES } from '@/config/roles';
 
-interface Counselor {
+interface StaffUser {
   _id: string;
   name: string;
   email: string;
   role: string;
   createdAt: string;
+  isActive?: boolean;
 }
 
-export default function CreateCounselorPage() {
+export default function CounselorsPage() {
+  const [counselors, setCounselors] = useState<StaffUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRoleTab, setSelectedRoleTab] = useState<'ALL' | 'COUNSELOR' | 'ACADEMIC'>('ALL');
+
+  // New staff form state
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
+    name: '',
+    email: '',
+    password: '',
+    role: ROLES.COUNSELOR as string,
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [counselors, setCounselors] = useState<Counselor[]>([]);
-  const [loadingCounselors, setLoadingCounselors] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Edit State
-  const [editingCounselor, setEditingCounselor] = useState<Counselor | null>(null);
-  const [editFormData, setEditFormData] = useState({ name: "", email: "", password: "" });
+  // Edit modal state
+  const [editingCounselor, setEditingCounselor] = useState<StaffUser | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: ROLES.COUNSELOR as string,
+  });
   const [isUpdating, setIsUpdating] = useState(false);
-  const [updateError, setUpdateError] = useState("");
-  const [updateSuccess, setUpdateSuccess] = useState("");
+  const [updateError, setUpdateError] = useState('');
+  const [updateSuccess, setUpdateSuccess] = useState('');
 
-  // Delete State
-  const [deletingCounselor, setDeletingCounselor] = useState<Counselor | null>(null);
+  // Delete modal state
+  const [deletingCounselor, setDeletingCounselor] = useState<StaffUser | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const fetchCounselors = async () => {
-    setLoadingCounselors(true);
-    try {
-      const res = await fetch("/api/admin/counselors");
-      if (res.ok) {
-        const data = await res.json();
-        setCounselors(Array.isArray(data) ? data : []);
-      }
-    } catch (err) {
-      console.error("Error fetching counselors:", err);
-    } finally {
-      setLoadingCounselors(false);
-    }
-  };
 
   useEffect(() => {
     fetchCounselors();
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (error) setError("");
-    if (success) setSuccess("");
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
-    setSuccess("");
-
+  const fetchCounselors = async () => {
+    setLoading(true);
+    setError('');
     try {
-      const response = await fetch("/api/admin/counselors", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to create counselor");
+      const res = await fetch('/api/admin/counselors');
+      if (!res.ok) {
+        throw new Error('Failed to fetch staff members');
       }
-
-      setSuccess("Counselor created successfully!");
-      setFormData({ name: "", email: "", password: "" });
-      fetchCounselors();
+      const data = await res.json();
+      setCounselors(Array.isArray(data) ? data : []);
     } catch (err: any) {
-      setError(err.message || "An unexpected error occurred");
+      console.error(err);
+      setError(err.message || 'Error fetching staff records');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  // Open Edit Modal
-  const handleOpenEdit = (counselor: Counselor) => {
-    setEditingCounselor(counselor);
-    setEditFormData({ name: counselor.name, email: counselor.email, password: "" });
-    setUpdateError("");
-    setUpdateSuccess("");
-  };
-
-  // Handle Edit Submission
-  const handleUpdateSubmit = async (e: React.FormEvent) => {
+  const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingCounselor) return;
-
-    setIsUpdating(true);
-    setUpdateError("");
-    setUpdateSuccess("");
+    setIsSubmitting(true);
+    setError('');
+    setSuccess('');
 
     try {
-      const res = await fetch(`/api/admin/counselors/${editingCounselor._id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editFormData),
+      const res = await fetch('/api/admin/counselors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Failed to update counselor");
+        throw new Error(data.error || 'Failed to create staff member');
       }
 
-      setUpdateSuccess("Counselor updated successfully!");
+      setSuccess(data.message || 'Staff member created successfully!');
+      setFormData({ name: '', email: '', password: '', role: ROLES.COUNSELOR });
+      fetchCounselors();
+      setTimeout(() => setSuccess(''), 4000);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleOpenEdit = (counselor: StaffUser) => {
+    setEditingCounselor(counselor);
+    setEditFormData({
+      name: counselor.name,
+      email: counselor.email,
+      password: '',
+      role: counselor.role || ROLES.COUNSELOR,
+    });
+    setUpdateError('');
+    setUpdateSuccess('');
+  };
+
+  const handleUpdateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCounselor) return;
+
+    setIsUpdating(true);
+    setUpdateError('');
+    setUpdateSuccess('');
+
+    try {
+      const payload: any = {
+        name: editFormData.name,
+        email: editFormData.email,
+        role: editFormData.role,
+      };
+      if (editFormData.password.trim().length > 0) {
+        payload.password = editFormData.password.trim();
+      }
+
+      const res = await fetch(`/api/admin/counselors/${editingCounselor._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to update staff member');
+      }
+
+      setUpdateSuccess('Staff details updated successfully!');
       fetchCounselors();
       setTimeout(() => {
         setEditingCounselor(null);
-      }, 1000);
+      }, 1200);
     } catch (err: any) {
-      setUpdateError(err.message || "An error occurred while updating");
+      setUpdateError(err.message);
     } finally {
       setIsUpdating(false);
     }
   };
 
-  // Handle Counselor Deletion
   const handleDeleteConfirm = async () => {
     if (!deletingCounselor) return;
 
     setIsDeleting(true);
     try {
       const res = await fetch(`/api/admin/counselors/${deletingCounselor._id}`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Failed to delete counselor");
+        throw new Error(data.error || 'Failed to delete staff member');
       }
 
       setDeletingCounselor(null);
       fetchCounselors();
     } catch (err: any) {
-      alert(err.message || "Error deleting counselor");
+      alert(err.message || 'Error deleting account');
     } finally {
       setIsDeleting(false);
     }
   };
 
+  // Filter staff by Tab and Search
+  const filteredCounselors = counselors.filter((c) => {
+    const matchesRole =
+      selectedRoleTab === 'ALL' ? true : c.role === selectedRoleTab;
+
+    const matchesSearch =
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.email.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return matchesRole && matchesSearch;
+  });
+
+  const counselorCount = counselors.filter((c) => c.role === ROLES.COUNSELOR).length;
+  const academicCount = counselors.filter((c) => c.role === ROLES.ACADEMIC).length;
+
   return (
-    <div className="min-h-full py-8 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto font-sans">
-      <div className="mb-8">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-md shadow-indigo-500/20">
-            <Users className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-800">
-              Counselor Management Portal
-            </h1>
-            <p className="text-sm text-gray-500 font-medium">
-              Create separate counselor accounts, edit profiles, and manage active counselors.
-            </p>
-          </div>
+    <div className="space-y-6 font-sans text-gray-800 pb-12">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-extrabold text-[#112a46] tracking-tight flex items-center gap-2">
+            <Users className="h-7 w-7 text-indigo-600" />
+            Staff & Counselor Management
+          </h1>
+          <p className="mt-0.5 text-xs text-gray-500 font-medium">
+            Manage Counselor sales agents and Academic Operations team members
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 text-xs font-semibold">
+          <span className="px-3 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-100 flex items-center gap-1.5">
+            <Headset className="h-3.5 w-3.5" />
+            Counselors: <strong className="font-bold">{counselorCount}</strong>
+          </span>
+          <span className="px-3 py-1.5 rounded-xl bg-purple-50 text-purple-700 border border-purple-100 flex items-center gap-1.5">
+            <GraduationCap className="h-3.5 w-3.5" />
+            Academic Team: <strong className="font-bold">{academicCount}</strong>
+          </span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Card: Add Counselor Form */}
-        <div className="lg:col-span-5 bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-2.5 pb-4 border-b border-gray-100 mb-6">
-            <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600">
-              <UserPlus className="h-5 w-5" />
+      {/* Main Grid: Form + Directory */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Create Staff Form Card */}
+        <div className="bg-white rounded-2xl p-5 shadow-xs border border-gray-100 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-2.5 pb-3 border-b border-gray-100 mb-4">
+              <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600">
+                <UserPlus className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-slate-800">Add New Staff Member</h2>
+                <p className="text-[11px] text-gray-400 font-medium">Create counselor or academic account</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-base font-bold text-slate-800">Add New Counselor</h2>
-              <p className="text-xs text-gray-400 font-medium">Grant independent login credentials</p>
-            </div>
-          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="rounded-xl bg-red-50 p-4 border border-red-200 flex items-center gap-3 text-red-700 text-sm font-medium">
-                <AlertCircle className="h-5 w-5 shrink-0 text-red-500" />
+              <div className="rounded-xl bg-red-50 p-3 mb-4 border border-red-200 flex items-center gap-2 text-red-700 text-xs font-medium">
+                <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
                 <span>{error}</span>
               </div>
             )}
 
             {success && (
-              <div className="rounded-xl bg-green-50 p-4 border border-green-200 flex items-center gap-3 text-green-700 text-sm font-medium">
-                <CheckCircle2 className="h-5 w-5 shrink-0 text-green-500" />
+              <div className="rounded-xl bg-green-50 p-3 mb-4 border border-green-200 flex items-center gap-2 text-green-700 text-xs font-medium">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-green-500" />
                 <span>{success}</span>
               </div>
             )}
 
-            <div>
-              <label htmlFor="name" className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-                Full Name <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-                  <User className="h-4 w-4 text-gray-400" />
+            <form onSubmit={handleCreateSubmit} className="space-y-3.5">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">
+                  Full Name
+                </label>
+                <div className="relative">
+                  <User className="h-4 w-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="e.g. Sarah Jenkins"
+                    className="w-full rounded-xl border border-gray-200 py-2 pl-9 pr-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-600 font-medium"
+                  />
                 </div>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="block w-full rounded-xl border border-gray-200 py-2.5 pl-10 text-sm text-slate-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 font-medium transition-all"
-                  placeholder="Abu Saalim"
-                />
               </div>
-            </div>
 
-            <div>
-              <label htmlFor="email" className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-                Email Address <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-                  <Mail className="h-4 w-4 text-gray-400" />
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="h-4 w-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="email"
+                    required
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="name@bditacademic.com"
+                    className="w-full rounded-xl border border-gray-200 py-2 pl-9 pr-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-600 font-medium"
+                  />
                 </div>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="block w-full rounded-xl border border-gray-200 py-2.5 pl-10 text-sm text-slate-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 font-medium transition-all"
-                  placeholder="saalim@bditacademic.com"
-                />
               </div>
-            </div> 
 
-            <div>
-              <label htmlFor="password" className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-                Password <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-                  <Lock className="h-4 w-4 text-gray-400" />
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">
+                  Role Assignment
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, role: ROLES.COUNSELOR })}
+                    className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border text-xs font-semibold transition-all ${
+                      formData.role === ROLES.COUNSELOR
+                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-2xs ring-1 ring-indigo-600'
+                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Headset className="h-3.5 w-3.5" />
+                    <span>Counselor</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, role: ROLES.ACADEMIC })}
+                    className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border text-xs font-semibold transition-all ${
+                      formData.role === ROLES.ACADEMIC
+                        ? 'border-purple-600 bg-purple-50 text-purple-700 shadow-2xs ring-1 ring-purple-600'
+                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <GraduationCap className="h-3.5 w-3.5" />
+                    <span>Academic</span>
+                  </button>
                 </div>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  minLength={6}
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="block w-full rounded-xl border border-gray-200 py-2.5 pl-10 text-sm text-slate-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 font-medium transition-all"
-                  placeholder="••••••••"
-                />
               </div>
-            </div>
 
-            <div className="pt-2">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="h-4 w-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder="Min 6 characters..."
+                    className="w-full rounded-xl border border-gray-200 py-2 pl-9 pr-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-600 font-medium"
+                  />
+                </div>
+              </div>
+
               <button
                 type="submit"
-                disabled={isLoading}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#112a46] hover:bg-[#1a3d66] px-4 py-3 text-sm font-bold text-white shadow-md transition-all disabled:opacity-70 active:scale-98"
+                disabled={isSubmitting}
+                className="w-full mt-2 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition-all flex items-center justify-center gap-1.5 disabled:opacity-70"
               >
-                {isLoading ? (
+                {isSubmitting ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Creating Counselor...</span>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>Creating Account...</span>
                   </>
                 ) : (
                   <>
                     <UserPlus className="h-4 w-4" />
-                    <span>Create Counselor Account</span>
+                    <span>Create Staff Account</span>
                   </>
                 )}
               </button>
-            </div>
-          </form>
-        </div>
-
-        {/* Right Card: List of Existing Counselors */}
-        <div className="lg:col-span-7 bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-gray-100 overflow-hidden">
-          <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-6">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600">
-                <ShieldCheck className="h-5 w-5" />
-              </div>
-              <div>
-                <h2 className="text-base font-bold text-slate-800">Active Counselor Directory</h2>
-                <p className="text-xs text-gray-400 font-medium">Isolated student data spaces assigned</p>
-              </div>
-            </div>
-            <span className="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded-full">
-              {counselors.length} Counselors
-            </span>
+            </form>
           </div>
 
-          {loadingCounselors ? (
-            <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-              <Loader2 className="h-7 w-7 animate-spin text-indigo-600 mb-2" />
-              <span className="text-xs font-medium">Loading active counselors...</span>
+          <div className="mt-4 p-3 rounded-xl bg-slate-50 border border-slate-100 text-[11px] text-slate-500">
+            <p className="font-semibold text-slate-700 mb-0.5">Role Permissions:</p>
+            <p className="text-[10px]">
+              • <strong>Counselor:</strong> Dedicated leads & admissions registration for assigned students.
+            </p>
+            <p className="text-[10px]">
+              • <strong>Academic:</strong> Full admissions access, partner universities, and student operations.
+            </p>
+          </div>
+        </div>
+
+        {/* Staff Directory Column */}
+        <div className="lg:col-span-2 space-y-4">
+          {/* Filter & Search Bar */}
+          <div className="bg-white rounded-2xl p-4 shadow-xs border border-gray-100 flex flex-col sm:flex-row gap-3 items-center justify-between">
+            {/* Tabs */}
+            <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={() => setSelectedRoleTab('ALL')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  selectedRoleTab === 'ALL'
+                    ? 'bg-white text-slate-800 shadow-2xs'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                All ({counselors.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedRoleTab('COUNSELOR')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  selectedRoleTab === 'COUNSELOR'
+                    ? 'bg-white text-indigo-700 shadow-2xs'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Counselors ({counselorCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedRoleTab('ACADEMIC')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  selectedRoleTab === 'ACADEMIC'
+                    ? 'bg-white text-purple-700 shadow-2xs'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Academic Team ({academicCount})
+              </button>
             </div>
-          ) : counselors.length === 0 ? (
-            <div className="text-center py-16 px-4 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
-              <Users className="h-10 w-10 text-gray-300 mx-auto mb-2" />
-              <p className="text-sm font-bold text-slate-700">No counselors created yet</p>
-              <p className="text-xs text-gray-400 mt-1 max-w-xs mx-auto">
-                Use the form on the left to create accounts. Each counselor will only see data assigned to or created by them.
+
+            {/* Search Box */}
+            <div className="relative w-full sm:w-60">
+              <Search className="h-3.5 w-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by name or email..."
+                className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-gray-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-600 bg-slate-50/50"
+              />
+            </div>
+          </div>
+
+          {/* Directory Content List */}
+          {loading ? (
+            <div className="bg-white rounded-2xl p-12 shadow-xs border border-gray-100 flex flex-col items-center justify-center text-gray-400">
+              <Loader2 className="h-6 w-6 animate-spin mb-2 text-indigo-600" />
+              <p className="text-xs font-medium">Loading staff records...</p>
+            </div>
+          ) : filteredCounselors.length === 0 ? (
+            <div className="bg-white rounded-2xl p-12 shadow-xs border border-gray-100 flex flex-col items-center justify-center text-gray-400 text-center">
+              <Users className="h-10 w-10 text-gray-300 mb-2" />
+              <p className="text-sm font-bold text-gray-700">No staff members found</p>
+              <p className="text-xs text-gray-400 mt-1 max-w-sm">
+                {searchQuery
+                  ? 'No records match your search criteria. Try a different query.'
+                  : 'Add a new counselor or academic member using the form on the left.'}
               </p>
             </div>
           ) : (
-            <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
-              {counselors.map((counselor) => (
-                <div
-                  key={counselor._id}
-                  className="p-4 rounded-xl border border-gray-100 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-indigo-600 text-white font-bold flex items-center justify-center text-sm shrink-0 shadow-xs">
-                      {counselor.name ? counselor.name.charAt(0).toUpperCase() : "C"}
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              {filteredCounselors.map((counselor) => {
+                const isAcademic = counselor.role === ROLES.ACADEMIC;
+                return (
+                  <div
+                    key={counselor._id}
+                    className="bg-white rounded-2xl p-4 shadow-xs border border-gray-100 hover:border-indigo-100 hover:shadow-md transition-all flex flex-col justify-between group"
+                  >
                     <div>
-                      <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                        {counselor.name}
-                        <span className="text-[10px] px-2 py-0.5 rounded font-bold bg-indigo-50 text-indigo-600 border border-indigo-100">
-                          COUNSELOR
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2.5">
+                          <div
+                            className={`h-9 w-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
+                              isAcademic
+                                ? 'bg-purple-100 text-purple-700'
+                                : 'bg-indigo-100 text-indigo-700'
+                            }`}
+                          >
+                            {counselor.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <h3 className="text-xs font-extrabold text-slate-800 leading-tight">
+                              {counselor.name}
+                            </h3>
+                            <p className="text-[11px] text-gray-500 font-mono mt-0.5 select-all">
+                              {counselor.email}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Role Badge */}
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold border uppercase tracking-wider ${
+                            isAcademic
+                              ? 'bg-purple-50 text-purple-700 border-purple-200'
+                              : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                          }`}
+                        >
+                          {isAcademic ? (
+                            <>
+                              <GraduationCap className="h-3 w-3" />
+                              <span>Academic</span>
+                            </>
+                          ) : (
+                            <>
+                              <Headset className="h-3 w-3" />
+                              <span>Counselor</span>
+                            </>
+                          )}
                         </span>
-                      </h3>
-                      <p className="text-xs text-gray-500 font-medium mt-0.5 flex items-center gap-1.5">
-                        <Mail className="h-3 w-3 text-gray-400" />
-                        {counselor.email}
-                      </p>
-                    </div>
-                  </div>
+                      </div>
 
-                  <div className="flex items-center gap-3 justify-between sm:justify-end border-t sm:border-t-0 pt-2 sm:pt-0 border-gray-150">
-                    <div className="flex flex-col items-start sm:items-end text-xs">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
-                        Isolated Access
-                      </span>
-                      <span className="text-[11px] text-gray-400 font-medium mt-1 flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {counselor.createdAt
-                          ? new Date(counselor.createdAt).toLocaleDateString("en-IN", {
-                              day: "2-digit",
-                              month: "short",
-                              year: "numeric",
-                            })
-                          : "Active"}
-                      </span>
+                      <div className="text-[10px] text-gray-400 font-medium flex items-center gap-1.5 mt-2 pt-2 border-t border-gray-50">
+                        <span>Joined:</span>
+                        <span className="font-semibold text-gray-600">
+                          {new Date(counselor.createdAt).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                        </span>
+                      </div>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex items-center gap-1.5 pl-2 border-l border-gray-200">
+                    <div className="flex items-center justify-end gap-1 mt-3 pt-2 border-t border-gray-50">
                       <button
+                        type="button"
                         onClick={() => handleOpenEdit(counselor)}
-                        title="Edit Counselor"
-                        className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                        title="Edit Details"
+                        className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
                       >
-                        <Edit className="h-4 w-4" />
+                        <Edit className="h-3.5 w-3.5" />
                       </button>
                       <button
+                        type="button"
                         onClick={() => setDeletingCounselor(counselor)}
-                        title="Delete Counselor"
-                        className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                        title="Delete Staff"
+                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -421,8 +559,8 @@ export default function CreateCounselorPage() {
                 <Edit className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-800">Edit Counselor Details</h3>
-                <p className="text-xs text-gray-400 font-medium">Update profile or change password</p>
+                <h3 className="text-base font-bold text-slate-800">Edit Staff Member</h3>
+                <p className="text-xs text-gray-400 font-medium">Update role, details, or password</p>
               </div>
             </div>
 
@@ -478,6 +616,38 @@ export default function CreateCounselorPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">
+                  Role Assignment
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditFormData({ ...editFormData, role: ROLES.COUNSELOR })}
+                    className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border text-xs font-semibold transition-all ${
+                      editFormData.role === ROLES.COUNSELOR
+                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600'
+                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Headset className="h-3.5 w-3.5" />
+                    <span>Counselor</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditFormData({ ...editFormData, role: ROLES.ACADEMIC })}
+                    className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border text-xs font-semibold transition-all ${
+                      editFormData.role === ROLES.ACADEMIC
+                        ? 'border-purple-600 bg-purple-50 text-purple-700 ring-1 ring-purple-600'
+                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <GraduationCap className="h-3.5 w-3.5" />
+                    <span>Academic</span>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">
                   New Password <span className="text-gray-400 font-normal lowercase">(leave blank to keep current)</span>
                 </label>
                 <div className="relative">
@@ -497,14 +667,14 @@ export default function CreateCounselorPage() {
                 <button
                   type="button"
                   onClick={() => setEditingCounselor(null)}
-                  className="w-1/2 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all"
+                  className="w-1/2 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isUpdating}
-                  className="w-1/2 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md transition-all flex items-center justify-center gap-1.5 disabled:opacity-70"
+                  className="w-1/2 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md transition-all flex items-center justify-center gap-1.5 disabled:opacity-70 cursor-pointer"
                 >
                   {isUpdating ? (
                     <>
@@ -528,9 +698,9 @@ export default function CreateCounselorPage() {
             <div className="h-12 w-12 rounded-full bg-red-100 text-red-600 mx-auto flex items-center justify-center mb-4">
               <AlertTriangle className="h-6 w-6" />
             </div>
-            <h3 className="text-base font-bold text-slate-800 mb-1">Delete Counselor?</h3>
+            <h3 className="text-base font-bold text-slate-800 mb-1">Delete Staff Member?</h3>
             <p className="text-xs text-gray-500 font-medium mb-6">
-              Are you sure you want to remove <span className="font-bold text-slate-800">{deletingCounselor.name}</span>? This account will be deleted permanently.
+              Are you sure you want to remove <span className="font-bold text-slate-800">{deletingCounselor.name}</span> ({deletingCounselor.role})? This account will be deleted permanently.
             </p>
 
             <div className="flex gap-3">
@@ -538,7 +708,7 @@ export default function CreateCounselorPage() {
                 type="button"
                 onClick={() => setDeletingCounselor(null)}
                 disabled={isDeleting}
-                className="w-1/2 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all disabled:opacity-50"
+                className="w-1/2 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all disabled:opacity-50 cursor-pointer"
               >
                 Cancel
               </button>
@@ -546,7 +716,7 @@ export default function CreateCounselorPage() {
                 type="button"
                 onClick={handleDeleteConfirm}
                 disabled={isDeleting}
-                className="w-1/2 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-md transition-all flex items-center justify-center gap-1.5 disabled:opacity-70"
+                className="w-1/2 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-md transition-all flex items-center justify-center gap-1.5 disabled:opacity-70 cursor-pointer"
               >
                 {isDeleting ? (
                   <>

@@ -1,14 +1,20 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import connectToDatabase from "@/lib/db";
 import User from "@/models/User";
+import { ROLES } from "@/config/roles";
 import bcrypt from "bcryptjs";
+import { verifyApiAuth } from "@/utils/authGuard";
 
 export async function PUT(
-  req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectToDatabase();
+    const auth = await verifyApiAuth(req);
+    if (auth.error || !auth.user || auth.user.role !== ROLES.ADMIN) {
+      return NextResponse.json({ error: "Unauthorized. Admin access required." }, { status: 403 });
+    }
     const { id } = await params;
 
     if (!id) {
@@ -16,11 +22,11 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { name, email, password } = body;
+    const { name, email, password, role } = body;
 
     const user = await User.findById(id);
     if (!user) {
-      return NextResponse.json({ error: "Counselor not found" }, { status: 404 });
+      return NextResponse.json({ error: "Staff user not found" }, { status: 404 });
     }
 
     if (email) {
@@ -41,6 +47,10 @@ export async function PUT(
       user.name = name;
     }
 
+    if (role && (role === ROLES.COUNSELOR || role === ROLES.ACADEMIC)) {
+      user.role = role;
+    }
+
     if (password && password.trim().length > 0) {
       if (password.trim().length < 6) {
         return NextResponse.json(
@@ -56,7 +66,7 @@ export async function PUT(
 
     return NextResponse.json(
       {
-        message: "Counselor updated successfully",
+        message: "Staff member updated successfully",
         user: {
           _id: user._id,
           name: user.name,
@@ -77,11 +87,15 @@ export async function PUT(
 }
 
 export async function DELETE(
-  req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectToDatabase();
+    const auth = await verifyApiAuth(req);
+    if (auth.error || !auth.user || auth.user.role !== ROLES.ADMIN) {
+      return NextResponse.json({ error: "Unauthorized. Admin access required." }, { status: 403 });
+    }
     const { id } = await params;
 
     if (!id) {

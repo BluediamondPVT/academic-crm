@@ -45,10 +45,16 @@ export default function Sidebar({ role }: SidebarProps) {
     } 
   };
 
- const navItems = [
-    { name: "Dashboard", href: role === "ADMIN" ? "/admin" : "/counselor", icon: LayoutDashboard },
+  const getDashboardHref = () => {
+    if (role === "ADMIN") return "/admin";
+    if (role === "ACADEMIC") return "/academic";
+    return "/counselor";
+  };
+
+  const navItems = [
+    { name: "Dashboard", href: getDashboardHref(), icon: LayoutDashboard },
     
-    // 🔥 Admin Only Tabs (Counselors aur Universities dono yahan aayenge)
+    // 🔥 Admin Only Tabs
     ...(role === "ADMIN" ? [
       { name: "Counselors", href: "/admin/counselors", icon: Users },
       { name: "Universities", href: "/admin/universities", icon: GraduationCap },
@@ -56,12 +62,19 @@ export default function Sidebar({ role }: SidebarProps) {
       { name: "Admission", href: "/admissions", icon: Users }
     ] : []),
 
+    // 🔥 Academic Only Tabs
+    ...(role === "ACADEMIC" ? [
+      { name: "Admission", href: "/admissions", icon: Users },
+      { name: "Universities", href: "/admin/universities", icon: GraduationCap },
+      { name: "Leads", href: "/admin/students", icon: Headset },
+    ] : []),
+
     // 🔥 Counselor Only Tabs
     ...(role === "COUNSELOR" ? [
       { name: "Leads", href: "/counselor/leads", icon: Headset }
     ] : []),
     
-    // Common Tabs (Dono ko dikhenge)
+    // Common Tabs
     { name: "Settings", href: "#", icon: Settings },
   ];
 

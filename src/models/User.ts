@@ -15,11 +15,11 @@ const userSchema = new Schema(
     password: {
       type: String,
       required: true,
-      select: false, // Default fetch mein password nahi aayega (Security)
+      select: false,
     },
     role: {
       type: String,
-      enum: [ROLES.ADMIN, ROLES.COUNSELOR],
+      enum: [ROLES.ADMIN, ROLES.COUNSELOR, ROLES.ACADEMIC],
       default: ROLES.COUNSELOR,
       required: true,
     },

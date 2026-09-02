@@ -35,7 +35,7 @@ export default function ConfirmedAdmissionsPage() {
       .split('; ')
       .find(row => row.startsWith('userRole='))
       ?.split('=')[1];
-    setIsAdmin(roleCookie === 'ADMIN');
+    setIsAdmin(roleCookie === 'ADMIN' || roleCookie === 'ACADEMIC');
     fetchAdmissions();
   }, []);
 

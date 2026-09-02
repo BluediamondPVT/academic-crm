@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
       } else {
         filter = { _id: null };
       }
-    } else if (auth.user.role === 'ADMIN') {
+    } else if (auth.user.role === 'ADMIN' || auth.user.role === 'ACADEMIC') {
       const { searchParams } = new URL(req.url);
       const filterCounselorId = searchParams.get('counselorId');
       const filterCounselorName = searchParams.get('counselorName');
