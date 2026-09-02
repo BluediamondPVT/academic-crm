@@ -55,6 +55,9 @@ export function proxy(request: NextRequest) {
       if (pathname === '/counselor') {
         return NextResponse.redirect(new URL('/admin', request.url));
       }
+      if (pathname.startsWith('/admin/counselors')) {
+        return NextResponse.redirect(new URL('/admin/staff', request.url));
+      }
     }
   }
 
