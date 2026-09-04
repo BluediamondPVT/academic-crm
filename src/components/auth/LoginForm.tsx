@@ -36,6 +36,8 @@ export default function LoginForm() {
           router.push("/admin");
         } else if (userRole === "ACADEMIC") {
           router.push("/academic");
+        } else if (userRole === "STAFF") {
+          router.push("/workspace");
         } else {
           router.push("/counselor");
         }

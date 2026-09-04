@@ -38,7 +38,7 @@ export default function StaffPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedRoleTab, setSelectedRoleTab] = useState<'ALL' | 'COUNSELOR' | 'ACADEMIC'>('ALL');
+  const [selectedRoleTab, setSelectedRoleTab] = useState<'ALL' | 'COUNSELOR' | 'ACADEMIC' | 'STAFF'>('ALL');
 
   // New staff form state
   const [formData, setFormData] = useState({
@@ -207,6 +207,7 @@ export default function StaffPage() {
 
   const counselorCount = counselors.filter((c) => c.role === ROLES.COUNSELOR).length;
   const academicCount = counselors.filter((c) => c.role === ROLES.ACADEMIC).length;
+  const staffCount = counselors.filter((c) => c.role === ROLES.STAFF).length;
 
   return (
     <div className="space-y-6 font-sans text-gray-800 pb-12">
@@ -230,6 +231,10 @@ export default function StaffPage() {
           <span className="px-3 py-1.5 rounded-xl bg-purple-50 text-purple-700 border border-purple-100 flex items-center gap-1.5">
             <GraduationCap className="h-3.5 w-3.5" />
             Academic Team: <strong className="font-bold">{academicCount}</strong>
+          </span>
+          <span className="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center gap-1.5">
+            <Users className="h-3.5 w-3.5" />
+            Staff: <strong className="font-bold">{staffCount}</strong>
           </span>
         </div>
       </div>
@@ -305,7 +310,7 @@ export default function StaffPage() {
                 <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">
                   Role Assignment
                 </label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, role: ROLES.COUNSELOR })}
@@ -329,6 +334,18 @@ export default function StaffPage() {
                   >
                     <GraduationCap className="h-3.5 w-3.5" />
                     <span>Academic</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, role: ROLES.STAFF })}
+                    className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border text-xs font-semibold transition-all ${
+                      formData.role === ROLES.STAFF
+                        ? 'border-emerald-600 bg-emerald-50 text-emerald-700 shadow-2xs ring-1 ring-emerald-600'
+                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Users className="h-3.5 w-3.5" />
+                    <span>Staff (Tasks)</span>
                   </button>
                 </div>
               </div>
@@ -379,6 +396,9 @@ export default function StaffPage() {
             <p className="text-[10px]">
               • <strong>Academic:</strong> Full admissions access, partner universities, and student operations.
             </p>
+            <p className="text-[10px]">
+              • <strong>Staff:</strong> Operational members (like SEO) who receive and manage tasks in their Workspace.
+            </p>
           </div>
         </div>
 
@@ -420,6 +440,17 @@ export default function StaffPage() {
                 }`}
               >
                 Academic Team ({academicCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedRoleTab('STAFF')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  selectedRoleTab === 'STAFF'
+                    ? 'bg-white text-emerald-700 shadow-2xs'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Staff ({staffCount})
               </button>
             </div>
 
@@ -466,8 +497,10 @@ export default function StaffPage() {
                         <div className="flex items-center gap-2.5">
                           <div
                             className={`h-9 w-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
-                              isAcademic
+                              counselor.role === ROLES.ACADEMIC
                                 ? 'bg-purple-100 text-purple-700'
+                                : counselor.role === ROLES.STAFF
+                                ? 'bg-emerald-100 text-emerald-700'
                                 : 'bg-indigo-100 text-indigo-700'
                             }`}
                           >
@@ -486,15 +519,22 @@ export default function StaffPage() {
                         {/* Role Badge */}
                         <span
                           className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold border uppercase tracking-wider ${
-                            isAcademic
+                            counselor.role === ROLES.ACADEMIC
                               ? 'bg-purple-50 text-purple-700 border-purple-200'
+                              : counselor.role === ROLES.STAFF
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                               : 'bg-indigo-50 text-indigo-700 border-indigo-200'
                           }`}
                         >
-                          {isAcademic ? (
+                          {counselor.role === ROLES.ACADEMIC ? (
                             <>
                               <GraduationCap className="h-3 w-3" />
                               <span>Academic</span>
+                            </>
+                          ) : counselor.role === ROLES.STAFF ? (
+                            <>
+                              <Users className="h-3 w-3" />
+                              <span>Staff</span>
                             </>
                           ) : (
                             <>

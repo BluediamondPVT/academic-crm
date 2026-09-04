@@ -19,7 +19,7 @@ const userSchema = new Schema(
     },
     role: {
       type: String,
-      enum: [ROLES.ADMIN, ROLES.COUNSELOR, ROLES.ACADEMIC],
+      enum: [ROLES.ADMIN, ROLES.COUNSELOR, ROLES.ACADEMIC, ROLES.STAFF],
       default: ROLES.COUNSELOR,
       required: true,
     },

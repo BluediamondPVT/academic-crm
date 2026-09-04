@@ -13,6 +13,7 @@ import {
   X,
   GraduationCap,
   Headset,
+  ClipboardList,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -48,6 +49,7 @@ export default function Sidebar({ role }: SidebarProps) {
   const getDashboardHref = () => {
     if (role === "ADMIN") return "/admin";
     if (role === "ACADEMIC") return "/academic";
+    if (role === "STAFF") return "/workspace";
     return "/counselor";
   };
 
@@ -58,6 +60,7 @@ export default function Sidebar({ role }: SidebarProps) {
     ...(role === "ADMIN" ? [
       { name: "Staff", href: "/admin/staff", icon: Users },
       { name: "Universities", href: "/admin/universities", icon: GraduationCap },
+      { name: "Tasks", href: "/admin/tasks", icon: ClipboardList },
       { name: "Leads", href: "/admin/students", icon: Headset },
       { name: "Admission", href: "/admissions", icon: Users }
     ] : []),

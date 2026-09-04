@@ -20,6 +20,7 @@ export function proxy(request: NextRequest) {
   if (token && (isAuthPage || pathname === '/')) {
     if (userRole === ROLES.ADMIN) return NextResponse.redirect(new URL('/admin', request.url));
     if (userRole === ROLES.ACADEMIC) return NextResponse.redirect(new URL('/academic', request.url));
+    if (userRole === ROLES.STAFF) return NextResponse.redirect(new URL('/workspace', request.url));
     return NextResponse.redirect(new URL('/counselor', request.url));
   }
 
@@ -57,6 +58,14 @@ export function proxy(request: NextRequest) {
       }
       if (pathname.startsWith('/admin/counselors')) {
         return NextResponse.redirect(new URL('/admin/staff', request.url));
+      }
+    }
+
+    // 🔒 STAFF ROLE SECURITY:
+    // Staff ko sirf '/workspace' ka access hoga (jahan wo apne tasks dekh sakenge)
+    if (userRole === ROLES.STAFF) {
+      if (!pathname.startsWith('/workspace')) {
+        return NextResponse.redirect(new URL('/workspace', request.url));
       }
     }
   }

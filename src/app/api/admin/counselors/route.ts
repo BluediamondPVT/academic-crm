@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const assignedRole = (role === ROLES.ACADEMIC) ? ROLES.ACADEMIC : ROLES.COUNSELOR;
+    const assignedRole = [ROLES.ACADEMIC, ROLES.STAFF].includes(role) ? role : ROLES.COUNSELOR;
 
     // Trim and lowercase email
     const sanitizedEmail = email.trim().toLowerCase();
@@ -47,8 +47,8 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(
-      { 
-        message: `${assignedRole === ROLES.ACADEMIC ? "Academic staff" : "Counselor"} created successfully`, 
+      {
+        message: `${assignedRole === ROLES.ACADEMIC ? "Academic staff" : assignedRole === ROLES.STAFF ? "Operational staff" : "Counselor"} created successfully`, 
         user: { 
           id: newUser._id, 
           name: newUser.name, 
@@ -78,8 +78,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const roleParam = searchParams.get("role");
 
-    let query: any = { role: { $in: [ROLES.COUNSELOR, ROLES.ACADEMIC] } };
-    if (roleParam && (roleParam === ROLES.COUNSELOR || roleParam === ROLES.ACADEMIC)) {
+    let query: any = { role: { $in: [ROLES.COUNSELOR, ROLES.ACADEMIC, ROLES.STAFF] } };
+    if (roleParam && [ROLES.COUNSELOR, ROLES.ACADEMIC, ROLES.STAFF].includes(roleParam)) {
       query = { role: roleParam };
     }
 
