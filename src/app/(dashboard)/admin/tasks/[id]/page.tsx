@@ -1,3 +1,27 @@
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+
+export default function TaskDetailPage() {
+  return (
+    <div className="p-6">
+      <Link
+        href="/admin/tasks"
+        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-2xs"
+      >
+        <ArrowLeft size={14} />
+        <span>Back to Tasks</span>
+      </Link>
+      
+      {/* Blank page for now */}
+      <div className="mt-6"></div>
+    </div>
+  );
+}
+
+/*
+// ==========================================
+// PREVIOUS DETAILED CODE KEPT COMMENTED FOR FUTURE:
+// ==========================================
 "use client";
 
 import { useEffect, useState } from "react";
@@ -38,7 +62,7 @@ interface Task {
   updatedAt?: string;
 }
 
-export default function TaskDetailPage() {
+export function TaskDetailPreviousCode() {
   const params = useParams();
   const router = useRouter();
   const taskId = params?.id as string;
@@ -100,7 +124,6 @@ export default function TaskDetailPage() {
 
   return (
     <div className="space-y-6 font-sans text-gray-800 max-w-6xl mx-auto pb-12">
-      {/* Top Navigation & Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Link
@@ -132,9 +155,7 @@ export default function TaskDetailPage() {
         </div>
       </div>
 
-      {/* Task Info Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Holder / Assignee */}
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs">
           <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Holder (Assignee)</p>
           <div className="flex items-center gap-3">
@@ -148,7 +169,6 @@ export default function TaskDetailPage() {
           </div>
         </div>
 
-        {/* Start Time */}
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs">
           <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Start Time</p>
           <div className="flex items-center gap-2.5 text-slate-700">
@@ -165,7 +185,6 @@ export default function TaskDetailPage() {
           </div>
         </div>
 
-        {/* End Time / Due Date */}
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs">
           <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">End Time / Due Date</p>
           <div className="flex items-center gap-2.5 text-slate-700">
@@ -193,7 +212,6 @@ export default function TaskDetailPage() {
         </div>
       </div>
 
-      {/* Task Description / Details Card */}
       <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-xs space-y-3">
         <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider text-[11px]">
           Task Instructions & Description
@@ -203,7 +221,6 @@ export default function TaskDetailPage() {
         </div>
       </div>
 
-      {/* Future Details Placeholder */}
       <div className="bg-white p-12 rounded-2xl border border-dashed border-gray-200 text-center">
         <ClipboardList className="h-10 w-10 text-slate-300 mx-auto mb-2" />
         <h3 className="text-sm font-bold text-slate-700">Task Details & Work Log</h3>
@@ -214,3 +231,4 @@ export default function TaskDetailPage() {
     </div>
   );
 }
+*/
