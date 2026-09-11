@@ -23,6 +23,8 @@ interface SidebarProps {
 export default function Sidebar({ role }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [taskCount, setTaskCount] = useState(0);
+  const [hasTasks, setHasTasks] = useState(role === "STAFF");
   const pathname = usePathname();
   const router = useRouter();
 
@@ -31,6 +33,31 @@ export default function Sidebar({ role }: SidebarProps) {
     window.addEventListener("toggle-mobile-sidebar", handleToggle);
     return () => window.removeEventListener("toggle-mobile-sidebar", handleToggle);
   }, []);
+
+  useEffect(() => {
+    // Non-admin roles check their tasks
+    if (role === "ADMIN") return;
+
+    const checkTasks = async () => {
+      try {
+        const res = await fetch("/api/workspace/tasks");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.data)) {
+            const pending = data.data.filter((t: any) => t.status !== "COMPLETED").length;
+            setTaskCount(pending);
+            setHasTasks(data.data.length > 0 || role === "STAFF");
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching tasks for sidebar:", err);
+      }
+    };
+
+    checkTasks();
+    const interval = setInterval(checkTasks, 15000);
+    return () => clearInterval(interval);
+  }, [role, pathname]);
 
   const handleLogout = async () => {
     try {
@@ -54,7 +81,10 @@ export default function Sidebar({ role }: SidebarProps) {
   };
 
   const navItems = [
-    { name: "Dashboard", href: getDashboardHref(), icon: LayoutDashboard },
+    // Primary Dashboard for non-staff roles (Staff uses Tasks directly)
+    ...(role !== "STAFF" ? [
+      { name: "Dashboard", href: getDashboardHref(), icon: LayoutDashboard }
+    ] : []),
     
     // 🔥 Admin Only Tabs
     ...(role === "ADMIN" ? [
@@ -70,11 +100,18 @@ export default function Sidebar({ role }: SidebarProps) {
       { name: "Admission", href: "/admissions", icon: Users },
       { name: "Universities", href: "/admin/universities", icon: GraduationCap },
       { name: "Leads", href: "/admin/students", icon: Headset },
+      ...(hasTasks ? [{ name: "Tasks", href: "/workspace", icon: ClipboardList, badge: taskCount }] : [])
     ] : []),
 
     // 🔥 Counselor Only Tabs
     ...(role === "COUNSELOR" ? [
-      { name: "Leads", href: "/counselor/leads", icon: Headset }
+      { name: "Leads", href: "/counselor/leads", icon: Headset },
+      ...(hasTasks ? [{ name: "Tasks", href: "/workspace", icon: ClipboardList, badge: taskCount }] : [])
+    ] : []),
+
+    // 🔥 Staff Only Tabs
+    ...(role === "STAFF" ? [
+      { name: "Tasks", href: "/workspace", icon: ClipboardList, badge: taskCount }
     ] : []),
     
     // Common Tabs
@@ -115,14 +152,26 @@ export default function Sidebar({ role }: SidebarProps) {
             <Link
               key={item.name}
               href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative outline-none focus:outline-none ${
                 isActive
                   ? "bg-slate-800 text-indigo-400 font-semibold border-l-4 border-indigo-500 rounded-l-none"
                   : "text-slate-400 hover:text-white hover:bg-slate-800/60"
               } ${isCollapsed && !isMobileOpen ? "justify-center rounded-xl border-l-0" : ""}`}
             >
               <item.icon size={20} className={isActive ? "text-indigo-400" : "text-slate-400 group-hover:text-white transition-colors"} />
-              {(!isCollapsed || isMobileOpen) && <span className="text-sm font-medium">{item.name}</span>}
+              {(!isCollapsed || isMobileOpen) && (
+                <>
+                  <span className="text-sm font-medium flex-1">{item.name}</span>
+                  {Boolean(item.badge && item.badge > 0) && (
+                    <span className="bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-xs">
+                      {item.badge}
+                    </span>
+                  )}
+                </>
+              )}
+              {isCollapsed && !isMobileOpen && Boolean(item.badge && item.badge > 0) && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-indigo-500 ring-2 ring-slate-900" />
+              )}
             </Link>
           );
         })}
@@ -132,7 +181,7 @@ export default function Sidebar({ role }: SidebarProps) {
       <div className="p-4 border-t border-slate-800/80">
         <button
           onClick={handleLogout}
-          className={`flex items-center gap-3 text-rose-450 hover:text-rose-400 hover:bg-rose-950/20 p-2.5 rounded-xl w-full transition-all duration-200 ${
+          className={`flex items-center gap-3 text-rose-450 hover:text-rose-400 hover:bg-rose-950/20 p-2.5 rounded-xl w-full transition-all duration-200 outline-none focus:outline-none ${
             isCollapsed && !isMobileOpen ? "justify-center" : ""
           }`}
         >
@@ -147,18 +196,18 @@ export default function Sidebar({ role }: SidebarProps) {
     <>
       {/* Desktop Sidebar */}
       <aside
-        className={`hidden lg:flex flex-col relative h-screen bg-slate-900 border-r border-slate-950 transition-all duration-300 ease-in-out z-30 overflow-visible ${
+        className={`hidden lg:flex flex-col relative h-full bg-slate-900 border-r border-slate-950 transition-all duration-300 ease-in-out z-30 overflow-visible shrink-0 ${
           isCollapsed ? "w-20" : "w-64"
         }`}
       >
         {/* Toggle Collapse Button on Edge */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute -right-3.5 top-5 bg-white border border-slate-800 hover:bg-slate-800 rounded-full p-2 text-black hover:text-white shadow-sm transition-all duration-200 z-50"
+          className="hidden lg:flex items-center justify-center absolute -right-3.5 top-5 w-7 h-7 bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white border border-slate-700 rounded-full shadow-md transition-all duration-200 z-50 focus:outline-none"
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </button>
 
         {sidebarContent}

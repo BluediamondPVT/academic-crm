@@ -34,7 +34,7 @@ export default function Header({ role, userName }: HeaderProps) {
   }, [displayName]);
 
   return (
-    <header className="sticky top-0 z-40 h-16 w-full border-b border-slate-200 bg-white flex items-center justify-between px-6">
+    <header className="sticky top-0 z-40 h-16 w-full border-b border-slate-200 bg-white flex items-center justify-between px-6 shrink-0">
 
       {/* Left: Mobile hamburger menu */}
       <div className="flex items-center gap-4">

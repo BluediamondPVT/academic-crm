@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, description, assigneeId, priority } = body;
+    const { title, description, assigneeId, priority, dueDate } = body;
 
     if (!title || !description || !assigneeId) {
       return NextResponse.json(
@@ -68,6 +68,7 @@ export async function POST(request: NextRequest) {
       assignedBy: auth.user.userId,
       status: 'PENDING',
       priority: priority || 'MEDIUM',
+      ...(dueDate ? { dueDate: new Date(dueDate) } : {}),
     });
 
     // Populate for response
