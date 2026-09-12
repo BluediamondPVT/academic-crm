@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch tasks assigned to the current user
     const tasks = await Task.find({ assignee: auth.user.userId })
+      .populate('assignee', 'name email role')
       .populate('assignedBy', 'name email role')
       .sort({ createdAt: -1 });
 

@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { ROLES } from "@/config/roles";
 import TaskChatDrawer, { Message } from "@/components/tasks/TaskChatDrawer";
+import TaskProgressBar from "@/components/tasks/TaskProgressBar";
 
 interface User {
   _id: string;
@@ -383,9 +384,9 @@ export default function AdminTasksPage() {
                   <th className="py-3 px-4 min-w-[170px]">Holder</th>
                   <th className="py-3 px-4 min-w-[140px]">Start Time</th>
                   <th className="py-3 px-4 min-w-[140px]">End Time</th>
+                  <th className="py-3 px-4 min-w-[140px]">Due Date</th>
                   <th className="py-3 px-4 text-center w-24">Percentage</th>
                   <th className="py-3 px-4 w-28">Status</th>
-                  <th className="py-3 px-4 text-right min-w-[120px]">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -401,25 +402,27 @@ export default function AdminTasksPage() {
                     minute: "2-digit",
                   });
 
-                  // End time: dueDate if given, or completion time if completed, else '-'
-                  let endTimeStr = "—";
-                  if (task.dueDate) {
-                    endTimeStr = new Date(task.dueDate).toLocaleString([], {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    });
-                  } else if (task.status === "COMPLETED" && task.updatedAt) {
-                    endTimeStr = new Date(task.updatedAt).toLocaleString([], {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    });
-                  }
+                  // End time: completion time if completed, else '—'
+                  const endTimeStr = (task.status === "COMPLETED" && task.updatedAt)
+                    ? new Date(task.updatedAt).toLocaleString([], {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : "—";
+
+                  // Due Date
+                  const dueDateStr = task.dueDate
+                    ? new Date(task.dueDate).toLocaleString([], {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : "—";
 
                   return (
                     <tr 
@@ -428,15 +431,20 @@ export default function AdminTasksPage() {
                     >
                       {/* 1: ID */}
                       <td className="py-3.5 px-4 font-mono font-bold text-indigo-600 text-[11px]">
-                        {shortId}
+                        <Link href={`/admin/tasks/${task._id}`} className="hover:underline">
+                          {shortId}
+                        </Link>
                       </td>
 
                       {/* 2: Task Name */}
                       <td className="py-3.5 px-4">
                         <div className="flex flex-col">
-                          <span className="font-bold text-slate-800 text-xs group-hover:text-indigo-600 transition-colors">
+                          <Link
+                            href={`/admin/tasks/${task._id}`}
+                            className="font-bold text-slate-800 text-xs hover:text-indigo-600 transition-colors"
+                          >
                             {task.title}
-                          </span>
+                          </Link>
                           <span className="text-[11px] text-gray-500 line-clamp-1 mt-0.5">
                             {task.description}
                           </span>
@@ -481,12 +489,17 @@ export default function AdminTasksPage() {
                         {endTimeStr}
                       </td>
 
-                      {/* 6: Percentage (Left Blank / Placeholder as requested) */}
-                      <td className="py-3.5 px-4 text-center text-slate-400 font-semibold text-xs">
-                        —
+                      {/* 6: Due Date */}
+                      <td className="py-3.5 px-4 text-slate-600 text-[11px] whitespace-nowrap">
+                        {dueDateStr}
                       </td>
 
-                      {/* Status */}
+                      {/* 7: Percentage Progress */}
+                      <td className="py-3.5 px-4 text-center">
+                        <TaskProgressBar task={task} size="sm" showLabel={false} />
+                      </td>
+
+                      {/* 8: Status */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${
                           task.status === "COMPLETED"
@@ -504,17 +517,6 @@ export default function AdminTasksPage() {
                           }`} />
                           {task.status.replace("_", " ")}
                         </span>
-                      </td>
-
-                      {/* Action: Enter Button */}
-                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                        <Link
-                          href={`/admin/tasks/${task._id}`}
-                          className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all inline-flex items-center gap-1.5 shadow-xs hover:shadow-md"
-                        >
-                          <span>Enter</span>
-                          <ArrowRight size={13} />
-                        </Link>
                       </td>
                     </tr>
                   );
