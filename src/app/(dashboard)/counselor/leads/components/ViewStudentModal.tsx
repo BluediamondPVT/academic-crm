@@ -269,9 +269,8 @@ export default function ViewStudentModal({ student, onClose }: ViewStudentModalP
               <div className="bg-slate-900 border border-slate-800 text-white rounded-xl p-3.5">
                 <span className="text-xs text-indigo-300 font-medium block">Our Profit</span>
                 <span className="text-base font-extrabold text-indigo-200 mt-1 block">
-                  {/* TEMPORARY: Intentionally wrong calculation for testing (slight 19-20 difference, * 0.97) */}
                   {student.totalPaid && student.payoutPercentage
-                    ? `₹${Math.round(((student.totalPaid * student.payoutPercentage) / 100) * 0.97).toLocaleString('en-IN')}`
+                    ? `₹${Math.round((student.totalPaid * student.payoutPercentage) / 100).toLocaleString('en-IN')}`
                     : '₹0'}
                 </span>
               </div>

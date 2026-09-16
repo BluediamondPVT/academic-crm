@@ -98,8 +98,8 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
 
         // Find corresponding course index
         const foundUniv = univs.find(u => u._id === data.universityId);
-        const courseIdx = foundUniv 
-          ? foundUniv.courses.findIndex((c: any) => c.name === data.courseName) 
+        const courseIdx = foundUniv
+          ? foundUniv.courses.findIndex((c: any) => c.name === data.courseName)
           : -1;
 
         setFormData({
@@ -232,7 +232,7 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
         payload.totalPaid = (student?.totalPaid || 0) + paidVal;
         payload.session = formData.session;
         payload.payoutPercentage = Number(payoutPercentage) || 0;
-        
+
         if (paidVal > 0) {
           payload.paymentTransaction = {
             paymentType,
@@ -320,13 +320,13 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-8">
-            
+
             {/* Section 1: Enquiry Details */}
             <div>
               <h3 className="text-base font-bold text-slate-800 pb-2 border-b border-slate-100 mb-4">
                 Enquiry Details
               </h3>
-              
+
               {/* Enquiry Form Fields */}
               <div className="space-y-6">
 
@@ -380,9 +380,8 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
                         disabled={!selectedUniversity || student?.status === 'Admission'}
                         value={formData.courseIndex}
                         onChange={handleInputChange}
-                        className={`w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium transition-all ${
-                          (!selectedUniversity || student?.status === 'Admission') ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-white'
-                        }`}
+                        className={`w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium transition-all ${(!selectedUniversity || student?.status === 'Admission') ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-white'
+                          }`}
                       >
                         <option value="">
                           {selectedUniversity
@@ -566,7 +565,7 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
                       <option value="Follow-Up">Follow-Up</option>
                       <option value="Processing">Processing</option>
                       <option value="Hold">Hold</option>
-                      
+
                       <option value="Lost">Lost</option>
                       <option value="Admission">Admission</option>
                     </select>
@@ -591,19 +590,18 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
                             key={plan}
                             type="button"
                             onClick={() => handlePaymentPlanChange(plan)}
-                            className={`py-2 px-2.5 rounded-xl border text-xs font-bold flex flex-col items-center justify-center transition-all ${
-                              paymentType === plan
-                                ? 'border-indigo-600 bg-indigo-50/80 text-indigo-900 ring-1 ring-indigo-600/20 shadow-xxs'
-                                : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:bg-gray-50'
-                            }`}
+                            className={`py-2 px-2.5 rounded-xl border text-xs font-bold flex flex-col items-center justify-center transition-all ${paymentType === plan
+                              ? 'border-indigo-600 bg-indigo-50/80 text-indigo-900 ring-1 ring-indigo-600/20 shadow-xxs'
+                              : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:bg-gray-50'
+                              }`}
                           >
                             <span>{plan}</span>
                             <span className="text-[9px] font-medium text-gray-400 mt-0.5">
                               {plan === 'Yearly'
                                 ? `₹${(student.yearFee || (student.totalFee && student.duration ? Math.round(student.totalFee / student.duration) : student.totalFee || 0)).toLocaleString('en-IN')}`
                                 : plan === 'Semester'
-                                ? `₹${(student.semesterFee || (student.totalFee && student.duration ? Math.round(student.totalFee / (student.duration * 2)) : 0)).toLocaleString('en-IN')}`
-                                : 'Custom'}
+                                  ? `₹${(student.semesterFee || (student.totalFee && student.duration ? Math.round(student.totalFee / (student.duration * 2)) : 0)).toLocaleString('en-IN')}`
+                                  : 'Custom'}
                             </span>
                           </button>
                         ))}
@@ -613,7 +611,7 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-bold text-gray-600 mb-1">
-                          Amount Paid (₹) <span className="text-red-500">*</span>
+                          Admission Fee (₹) <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">₹</span>
@@ -628,6 +626,73 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
                         </div>
                       </div>
 
+
+
+
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 mb-1">
+                          Other Amount (Exam Fee, etc.)
+                        </label>
+                        <select
+                          value={paymentMode}
+                          onChange={(e) => setPaymentMode(e.target.value as any)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
+                        >
+                          <option value="2000">2000</option>
+                          <option value="3000">3000</option>
+                          <option value="4000">4000</option>
+                        </select>
+                      </div>
+
+
+                    </div>
+
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 mb-1">
+                          Paid To University
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">₹</span>
+                          <input
+                            type="number"
+                            value={amountPaid}
+                            onChange={(e) => setAmountPaid(e.target.value === '' ? '' : Number(e.target.value))}
+                            placeholder="Enter amount"
+                            className="w-full pl-6 pr-3 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
+                            required
+                          />
+                        </div>
+                      </div>
+
+
+
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 mb-1">
+                          Profit
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">₹</span>
+                          <input
+                            type="number"
+                            value={amountPaid}
+                            onChange={(e) => setAmountPaid(e.target.value === '' ? '' : Number(e.target.value))}
+                            placeholder="Enter amount"
+                            className="w-full pl-6 pr-3 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
+                            required
+                          />
+                        </div>
+                      </div>
+
+
+                    </div>
+
+
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-bold text-gray-600 mb-1">
                           Payment Mode
@@ -642,7 +707,6 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
                           <option value="Cash">Cash Payment</option>
                         </select>
                       </div>
-                    </div>
 
                       <div>
                         <label className="block text-xs font-bold text-gray-600 mb-1">
@@ -655,6 +719,9 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
                           className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
                         />
                       </div>
+                    </div>
+
+
 
                     {/* Inline Summary */}
                     {(() => {

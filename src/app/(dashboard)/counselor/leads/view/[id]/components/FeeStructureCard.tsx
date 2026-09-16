@@ -98,8 +98,7 @@ export const FeeStructureCard: React.FC<FeeStructureCardProps> = ({ student }) =
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 text-white hover:bg-slate-800 transition-colors">
               <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-300 block">Our Profit</span>
               <span className="text-sm font-black text-indigo-200 mt-0.5 block">
-                {/* TEMPORARY: Intentionally wrong calculation for testing (slight 19-20 difference, * 0.97) */}
-                ₹{Math.round((((student.totalPaid || 0) * (student.payoutPercentage || 0)) / 100) * 0.97).toLocaleString('en-IN')}
+                ₹{Math.round(((student.totalPaid || 0) * (student.payoutPercentage || 0)) / 100).toLocaleString('en-IN')}
               </span>
             </div>
           </div>

@@ -303,8 +303,7 @@ export default function ConfirmedAdmissionsPage() {
                 </tr>
               ) : (
                 filteredStudents.map((student, index) => {
-                  // TEMPORARY: Intentionally wrong calculation for testing (slight 19-20 difference, * 0.97)
-                  const profit = Math.round((((student.totalPaid || 0) * (student.payoutPercentage || 0)) / 100) * 0.97);
+                  const profit = Math.round(((student.totalPaid || 0) * (student.payoutPercentage || 0)) / 100);
                   const univAmt = Math.max(0, (student.totalPaid || 0) - profit);
                   const restFee = student.remainingFee !== undefined ? student.remainingFee : Math.max(0, (student.totalFee || 0) - (student.totalPaid || 0));
                   const isPaidInFull = restFee === 0 && (student.totalFee || 0) > 0;
