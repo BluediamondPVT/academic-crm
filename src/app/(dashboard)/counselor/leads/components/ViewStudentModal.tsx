@@ -255,7 +255,7 @@ export default function ViewStudentModal({ student, onClose }: ViewStudentModalP
               <div className="bg-emerald-50/60 border border-emerald-100 rounded-xl p-3.5">
                 <span className="text-xs text-emerald-600 font-bold block">Total Paid</span>
                 <span className="text-base font-extrabold text-emerald-950 mt-1 block">
-                  {student.totalPaid ? `₹${student.totalPaid.toLocaleString('en-IN')}` : '₹0'}
+                  {(student.totalPaid || student.otherAmount) ? `₹{((student.totalPaid || 0) + (student.otherAmount || 0)).toLocaleString('en-IN')}` : '₹0'}
                 </span>
               </div>
 

@@ -53,6 +53,10 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
   // Payment tracking states
   const [paymentType, setPaymentType] = useState<'Yearly' | 'Semester' | 'Custom'>('Yearly');
   const [amountPaid, setAmountPaid] = useState<number | ''>('');
+  const [otherAmount, setOtherAmount] = useState<number | ''>(2000);
+  const [isCustomOther, setIsCustomOther] = useState<boolean>(false);
+  const [paidToUniversity, setPaidToUniversity] = useState<number | ''>('');
+  const [profit, setProfit] = useState<number | ''>('');
   const [paymentMode, setPaymentMode] = useState<'UPI' | 'Bank' | 'Cash'>('UPI');
   const [nextDueDate, setNextDueDate] = useState<string>('');
   const [payoutPercentage, setPayoutPercentage] = useState<number | ''>('');
@@ -78,6 +82,104 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
       fetchStudentAndUniversities();
     }
   }, [studentId]);
+
+  const recalculateFinancials = (
+    newAdmFee: number | '',
+    newOtherFee: number | '',
+    pRatioOverride?: number,
+    manualChange?: 'univ' | 'profit',
+    manualValue?: number | ''
+  ) => {
+    const fee = Number(newAdmFee) || 0;
+    const other = Number(newOtherFee) || 0;
+    const total = fee + other;
+    const ratio = pRatioOverride !== undefined ? pRatioOverride : (Number(payoutPercentage) || 0);
+
+    if (manualChange === 'univ') {
+      const uVal = manualValue !== undefined && manualValue !== '' ? Number(manualValue) : 0;
+      setPaidToUniversity(manualValue !== undefined ? manualValue : '');
+      setProfit(total > 0 ? Math.max(0, total - uVal) : '');
+      return;
+    }
+
+    if (manualChange === 'profit') {
+      const pVal = manualValue !== undefined && manualValue !== '' ? Number(manualValue) : 0;
+      setProfit(manualValue !== undefined ? manualValue : '');
+      setPaidToUniversity(total > 0 ? Math.max(0, total - pVal) : '');
+      return;
+    }
+
+    if (total === 0) {
+      setPaidToUniversity('');
+      setProfit('');
+      return;
+    }
+
+    if (ratio > 0) {
+      const calcProfit = Math.round((fee * ratio) / 100);
+      const calcUniv = Math.max(0, total - calcProfit);
+      setProfit(calcProfit);
+      setPaidToUniversity(calcUniv);
+    } else {
+      if (paidToUniversity !== '') {
+        const uVal = Number(paidToUniversity) || 0;
+        setProfit(Math.max(0, total - uVal));
+      } else if (profit !== '') {
+        const pVal = Number(profit) || 0;
+        setPaidToUniversity(Math.max(0, total - pVal));
+      } else {
+        setPaidToUniversity(total);
+        setProfit(0);
+      }
+    }
+  };
+
+  const handleAdmissionFeeChange = (val: number | '') => {
+    setAmountPaid(val);
+    const courseToUse = selectedCourse || student;
+    const yearly = courseToUse?.yearFee || (courseToUse?.totalFee && courseToUse?.duration ? Math.round(courseToUse.totalFee / courseToUse.duration) : courseToUse?.totalFee) || 0;
+    const semester = courseToUse?.semesterFee || (courseToUse?.totalFee && courseToUse?.duration ? Math.round(courseToUse.totalFee / (courseToUse.duration * 2)) : 0) || 0;
+    if (val !== '' && Number(val) === Number(yearly)) {
+      setPaymentType('Yearly');
+    } else if (val !== '' && Number(val) === Number(semester)) {
+      setPaymentType('Semester');
+    } else {
+      setPaymentType('Custom');
+    }
+    recalculateFinancials(val, otherAmount);
+  };
+
+  const handleOtherAmountChange = (val: number | '') => {
+    setOtherAmount(val);
+    recalculateFinancials(amountPaid, val);
+  };
+
+  const handlePaidToUniversityChange = (val: number | '') => {
+    recalculateFinancials(amountPaid, otherAmount, undefined, 'univ', val);
+  };
+
+  const handleProfitChange = (val: number | '') => {
+    recalculateFinancials(amountPaid, otherAmount, undefined, 'profit', val);
+  };
+
+  const handlePaymentPlanChange = (plan: 'Yearly' | 'Semester' | 'Custom') => {
+    setPaymentType(plan);
+    const courseToUse = selectedCourse || student;
+    if (plan === 'Yearly') {
+      const yearly = courseToUse?.yearFee || (courseToUse?.totalFee && courseToUse?.duration ? Math.round(courseToUse.totalFee / courseToUse.duration) : courseToUse?.totalFee) || 0;
+      const newAdm = yearly ? Number(yearly) : '';
+      setAmountPaid(newAdm);
+      recalculateFinancials(newAdm, otherAmount);
+    } else if (plan === 'Semester') {
+      const sem = courseToUse?.semesterFee || (courseToUse?.totalFee && courseToUse?.duration ? Math.round(courseToUse.totalFee / (courseToUse.duration * 2)) : 0) || 0;
+      const newAdm = sem ? Number(sem) : '';
+      setAmountPaid(newAdm);
+      recalculateFinancials(newAdm, otherAmount);
+    } else if (plan === 'Custom') {
+      setAmountPaid('');
+      recalculateFinancials('', otherAmount);
+    }
+  };
 
   const fetchStudentAndUniversities = async () => {
     setLoading(true);
@@ -113,7 +215,51 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
           universityId: data.universityId || '',
           courseIndex: courseIdx >= 0 ? String(courseIdx) : '',
         });
-        setPayoutPercentage(data.payoutPercentage !== undefined ? data.payoutPercentage : '');
+
+        const studentPayout = data.payoutPercentage !== undefined 
+          ? data.payoutPercentage 
+          : (courseIdx >= 0 && foundUniv ? foundUniv.courses[courseIdx]?.payoutPercentage || 0 : 0);
+        setPayoutPercentage(studentPayout);
+
+        if (data.status === 'Admission') {
+          const initOther = data.otherAmount !== undefined ? data.otherAmount : 2000;
+          setOtherAmount(initOther);
+          if (![0, 2000, 3000, 4000].includes(Number(initOther))) {
+            setIsCustomOther(true);
+          }
+
+          if (data.nextDueDate) {
+            setNextDueDate(new Date(data.nextDueDate).toISOString().split('T')[0]);
+          } else if (data.payments && data.payments.length > 0) {
+            const lastDue = data.payments[data.payments.length - 1]?.nextDueDate;
+            if (lastDue) setNextDueDate(new Date(lastDue).toISOString().split('T')[0]);
+          }
+
+          const courseToUse = (courseIdx >= 0 && foundUniv) ? foundUniv.courses[courseIdx] : data;
+          const yearly = courseToUse?.yearFee || (courseToUse?.totalFee && courseToUse?.duration ? Math.round(courseToUse.totalFee / courseToUse.duration) : courseToUse?.totalFee) || 0;
+
+          if ((data.totalPaid || 0) === 0) {
+            const initAdm = yearly ? Number(yearly) : '';
+            setAmountPaid(initAdm);
+            setPaymentType('Yearly');
+
+            let calcProf = data.profit !== undefined && data.profit > 0 ? data.profit : 0;
+            if (!calcProf && studentPayout > 0 && initAdm) {
+              calcProf = Math.round((Number(initAdm) * studentPayout) / 100);
+            }
+            setProfit(calcProf > 0 ? calcProf : '');
+
+            if (data.paidToUniversity !== undefined && data.paidToUniversity > 0) {
+              setPaidToUniversity(data.paidToUniversity);
+            } else if (initAdm) {
+              const totalMoney = Number(initAdm) + Number(initOther);
+              setPaidToUniversity(Math.max(0, totalMoney - calcProf));
+            }
+          } else {
+            if (data.profit !== undefined) setProfit(data.profit);
+            if (data.paidToUniversity !== undefined) setPaidToUniversity(data.paidToUniversity);
+          }
+        }
       } else {
         setError('Failed to fetch student record details.');
       }
@@ -125,26 +271,17 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
     }
   };
 
-  const handlePaymentPlanChange = (plan: 'Yearly' | 'Semester' | 'Custom') => {
-    setPaymentType(plan);
-    const courseToUse = selectedCourse || student;
-    if (plan === 'Yearly') {
-      const yearly = courseToUse?.yearFee || (courseToUse?.totalFee && courseToUse?.duration ? Math.round(courseToUse.totalFee / courseToUse.duration) : courseToUse?.totalFee) || 0;
-      setAmountPaid(yearly ? Number(yearly) : '');
-    } else if (plan === 'Semester') {
-      const sem = courseToUse?.semesterFee || (courseToUse?.totalFee && courseToUse?.duration ? Math.round(courseToUse.totalFee / (courseToUse.duration * 2)) : 0) || 0;
-      setAmountPaid(sem ? Number(sem) : '');
-    } else if (plan === 'Custom') {
-      setAmountPaid('');
-    }
-  };
-
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     if (name === 'universityId') {
       setFormData(prev => ({ ...prev, universityId: value, courseIndex: '' }));
+      if (formData.status === 'Admission') {
+        setAmountPaid('');
+        setPaidToUniversity('');
+        setProfit('');
+      }
     } else if (name === 'courseIndex') {
       const courseIdx = value;
       const course = selectedUniversity && courseIdx !== '' ? selectedUniversity.courses[Number(courseIdx)] : null;
@@ -156,7 +293,11 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
           setAmountPaid(yearly ? Number(yearly) : '');
         }
         if (formData.status === 'Admission') {
-          setPayoutPercentage(course?.payoutPercentage || 0);
+          const pRatio = course?.payoutPercentage || 0;
+          setPayoutPercentage(pRatio);
+          if ((student?.totalPaid || 0) === 0 && yearly) {
+            recalculateFinancials(yearly, otherAmount, pRatio);
+          }
         } else {
           setPayoutPercentage('');
         }
@@ -172,7 +313,11 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
         setPaymentMode('UPI');
         setNextDueDate('');
         if (value === 'Admission') {
-          setPayoutPercentage(courseToUse?.payoutPercentage || 0);
+          const pRatio = courseToUse?.payoutPercentage || 0;
+          setPayoutPercentage(pRatio);
+          if ((student?.totalPaid || 0) === 0 && yearly) {
+            recalculateFinancials(yearly, otherAmount, pRatio);
+          }
         } else {
           setPayoutPercentage('');
         }
@@ -232,11 +377,20 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
         payload.totalPaid = (student?.totalPaid || 0) + paidVal;
         payload.session = formData.session;
         payload.payoutPercentage = Number(payoutPercentage) || 0;
+        payload.otherAmount = Number(otherAmount) || 0;
+        payload.paidToUniversity = Number(paidToUniversity) || 0;
+        payload.profit = Number(profit) || 0;
+        if (nextDueDate) {
+          payload.nextDueDate = new Date(nextDueDate).toISOString();
+        }
 
-        if (paidVal > 0) {
+        if (paidVal > 0 || (Number(otherAmount) || 0) > 0) {
           payload.paymentTransaction = {
             paymentType,
             amount: paidVal,
+            otherAmount: Number(otherAmount) || 0,
+            paidToUniversity: Number(paidToUniversity) || 0,
+            profit: Number(profit) || 0,
             paymentMode,
             nextDueDate: nextDueDate ? new Date(nextDueDate).toISOString() : undefined,
           };
@@ -618,7 +772,7 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
                           <input
                             type="number"
                             value={amountPaid}
-                            onChange={(e) => setAmountPaid(e.target.value === '' ? '' : Number(e.target.value))}
+                            onChange={(e) => handleAdmissionFeeChange(e.target.value === '' ? '' : Number(e.target.value))}
                             placeholder="Enter amount"
                             className="w-full pl-6 pr-3 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
                             required
@@ -626,31 +780,45 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
                         </div>
                       </div>
 
-
-
-
                       <div>
                         <label className="block text-xs font-bold text-gray-600 mb-1">
                           Other Amount (Exam Fee, etc.)
                         </label>
                         <select
-                          value={paymentMode}
-                          onChange={(e) => setPaymentMode(e.target.value as any)}
+                          value={isCustomOther ? 'custom' : (otherAmount === '' ? '0' : String(otherAmount))}
+                          onChange={(e) => {
+                            if (e.target.value === 'custom') {
+                              setIsCustomOther(true);
+                            } else {
+                              setIsCustomOther(false);
+                              handleOtherAmountChange(Number(e.target.value));
+                            }
+                          }}
                           className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
                         >
+                          <option value="0">0 (None)</option>
                           <option value="2000">2000</option>
                           <option value="3000">3000</option>
                           <option value="4000">4000</option>
+                          <option value="custom">Custom</option>
                         </select>
+                        {isCustomOther && (
+                          <div className="relative mt-2">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">₹</span>
+                            <input
+                              type="number"
+                              value={otherAmount}
+                              onChange={(e) => handleOtherAmountChange(e.target.value === '' ? '' : Number(e.target.value))}
+                              placeholder="Enter custom amount"
+                              className="w-full pl-6 pr-3 py-2 border border-indigo-200 rounded-lg text-xs font-bold text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
+                              autoFocus
+                            />
+                          </div>
+                        )}
                       </div>
-
-
                     </div>
 
-
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-
-
                       <div>
                         <label className="block text-xs font-bold text-gray-600 mb-1">
                           Paid To University
@@ -659,16 +827,13 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">₹</span>
                           <input
                             type="number"
-                            value={amountPaid}
-                            onChange={(e) => setAmountPaid(e.target.value === '' ? '' : Number(e.target.value))}
+                            value={paidToUniversity}
+                            onChange={(e) => handlePaidToUniversityChange(e.target.value === '' ? '' : Number(e.target.value))}
                             placeholder="Enter amount"
                             className="w-full pl-6 pr-3 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
-                            required
                           />
                         </div>
                       </div>
-
-
 
                       <div>
                         <label className="block text-xs font-bold text-gray-600 mb-1">
@@ -678,19 +843,14 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">₹</span>
                           <input
                             type="number"
-                            value={amountPaid}
-                            onChange={(e) => setAmountPaid(e.target.value === '' ? '' : Number(e.target.value))}
+                            value={profit}
+                            onChange={(e) => handleProfitChange(e.target.value === '' ? '' : Number(e.target.value))}
                             placeholder="Enter amount"
                             className="w-full pl-6 pr-3 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
-                            required
                           />
                         </div>
                       </div>
-
-
                     </div>
-
-
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
@@ -721,15 +881,15 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
                       </div>
                     </div>
 
-
-
                     {/* Inline Summary */}
                     {(() => {
                       const activeCourse = selectedCourse || student;
                       const totalCourseFee = Number(activeCourse?.totalFee || 0);
                       const existingPaid = Number(student?.totalPaid || 0);
-                      const currentPaying = Number(amountPaid) || 0;
-                      const remFee = Math.max(0, totalCourseFee - (existingPaid + currentPaying));
+                      const admFee = Number(amountPaid) || 0;
+                      const othAmt = Number(otherAmount) || 0;
+                      const currentPaying = admFee + othAmt;
+                      const remFee = Math.max(0, totalCourseFee - (existingPaid + admFee));
                       return (
                         <div className="bg-slate-900 rounded-xl p-3 text-white">
                           <div className="grid grid-cols-3 gap-1.5 text-center">

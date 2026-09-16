@@ -28,9 +28,15 @@ export interface IStudent extends Document {
   payoutPercentage?: number;
   totalPaid?: number;
   remainingFee?: number;
+  otherAmount?: number;
+  paidToUniversity?: number;
+  profit?: number;
   payments?: {
     paymentType: string;
     amount: number;
+    otherAmount?: number;
+    paidToUniversity?: number;
+    profit?: number;
     paymentMode: string;
     nextDueDate?: Date;
     date: Date;
@@ -75,10 +81,16 @@ const StudentSchema: Schema = new Schema(
     payoutPercentage: { type: Number, default: 0 },
     totalPaid: { type: Number, default: 0 },
     remainingFee: { type: Number, default: 0 },
+    otherAmount: { type: Number, default: 0 },
+    paidToUniversity: { type: Number, default: 0 },
+    profit: { type: Number, default: 0 },
     payments: [
       {
         paymentType: { type: String },
         amount: { type: Number },
+        otherAmount: { type: Number, default: 0 },
+        paidToUniversity: { type: Number, default: 0 },
+        profit: { type: Number, default: 0 },
         paymentMode: { type: String },
         nextDueDate: { type: Date },
         date: { type: Date, default: Date.now },

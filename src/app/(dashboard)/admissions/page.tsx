@@ -272,7 +272,7 @@ export default function ConfirmedAdmissionsPage() {
                 <th className="px-2 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Rest</th>
                 {isAdmin && (
                   <>
-                    {/* <th className="px-2 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Profit</th> */}
+                    <th className="px-2 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Profit</th>
                     <th className="px-2 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Univ Amt</th>
                     <th className="px-2 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Entry By</th>
                   </>
@@ -303,8 +303,12 @@ export default function ConfirmedAdmissionsPage() {
                 </tr>
               ) : (
                 filteredStudents.map((student, index) => {
-                  const profit = Math.round(((student.totalPaid || 0) * (student.payoutPercentage || 0)) / 100);
-                  const univAmt = Math.max(0, (student.totalPaid || 0) - profit);
+                  const otherAmt = student.otherAmount !== undefined && student.otherAmount > 0
+                    ? student.otherAmount
+                    : (student.payments?.reduce((acc: number, p: any) => acc + (Number(p.otherAmount) || 0), 0) || 0);
+                  const totalPaidDisplay = (Number(student.totalPaid) || 0) + otherAmt;
+                  const profit = student.profit !== undefined && student.profit > 0 ? student.profit : Math.round(((student.totalPaid || 0) * (student.payoutPercentage || 0)) / 100);
+                  const univAmt = student.paidToUniversity !== undefined && student.paidToUniversity > 0 ? student.paidToUniversity : Math.max(0, totalPaidDisplay - profit);
                   const restFee = student.remainingFee !== undefined ? student.remainingFee : Math.max(0, (student.totalFee || 0) - (student.totalPaid || 0));
                   const isPaidInFull = restFee === 0 && (student.totalFee || 0) > 0;
 
@@ -349,7 +353,7 @@ export default function ConfirmedAdmissionsPage() {
                       </td>
                       <td className="px-2 py-3">
                         <div className="text-[11px] font-bold text-emerald-600">
-                          ₹{(student.totalPaid || 0).toLocaleString('en-IN')}
+                          ₹{totalPaidDisplay.toLocaleString('en-IN')}
                         </div>
                       </td>
                       <td className="px-2 py-3">
@@ -360,11 +364,11 @@ export default function ConfirmedAdmissionsPage() {
 
                       {isAdmin && (
                         <>
-                          {/* <td className="px-2 py-3">
-                          <div className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md inline-block whitespace-nowrap">
-                            ₹{profit.toLocaleString('en-IN')}
-                          </div>
-                        </td> */}
+                          <td className="px-2 py-3">
+                            <div className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md inline-block whitespace-nowrap">
+                              ₹{profit.toLocaleString('en-IN')}
+                            </div>
+                          </td>
                           <td className="px-2 py-3">
                             <div className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md inline-block whitespace-nowrap">
                               ₹{univAmt.toLocaleString('en-IN')}

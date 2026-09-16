@@ -50,9 +50,15 @@ export interface StudentRecord {
   payoutPercentage?: number;
   totalPaid?: number;
   remainingFee?: number;
+  otherAmount?: number;
+  paidToUniversity?: number;
+  profit?: number;
   payments?: {
     paymentType: string;
     amount: number;
+    otherAmount?: number;
+    paidToUniversity?: number;
+    profit?: number;
     paymentMode: string;
     nextDueDate?: string;
     date: string;

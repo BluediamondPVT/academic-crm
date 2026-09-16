@@ -48,7 +48,7 @@ export const FeeStructureCard: React.FC<FeeStructureCardProps> = ({ student }) =
           <div className="bg-emerald-50/50 border border-emerald-100/60 rounded-xl p-3 hover:bg-emerald-50 transition-colors">
             <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-600 block">Total Paid</span>
             <span className="text-sm font-black text-emerald-950 mt-0.5 block">
-              {student.totalPaid ? `₹${student.totalPaid.toLocaleString('en-IN')}` : '₹0'}
+              {(student.totalPaid || student.otherAmount) ? `₹{((student.totalPaid || 0) + (student.otherAmount || 0)).toLocaleString('en-IN')}` : '₹0'}
             </span>
           </div>
 

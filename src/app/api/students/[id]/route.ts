@@ -196,6 +196,9 @@ export async function PUT(
       history.push({
         paymentType: body.paymentTransaction.paymentType || 'Yearly',
         amount: Number(body.paymentTransaction.amount) || 0,
+        otherAmount: body.paymentTransaction.otherAmount !== undefined ? Number(body.paymentTransaction.otherAmount) : 0,
+        paidToUniversity: body.paymentTransaction.paidToUniversity !== undefined ? Number(body.paymentTransaction.paidToUniversity) : 0,
+        profit: body.paymentTransaction.profit !== undefined ? Number(body.paymentTransaction.profit) : 0,
         paymentMode: body.paymentTransaction.paymentMode || 'UPI',
         nextDueDate: body.paymentTransaction.nextDueDate ? new Date(body.paymentTransaction.nextDueDate) : undefined,
         date: new Date(),
@@ -204,6 +207,11 @@ export async function PUT(
       body.payments = history;
       delete body.paymentTransaction;
     }
+
+    if (body.otherAmount !== undefined) body.otherAmount = Number(body.otherAmount) || 0;
+    if (body.paidToUniversity !== undefined) body.paidToUniversity = Number(body.paidToUniversity) || 0;
+    if (body.profit !== undefined) body.profit = Number(body.profit) || 0;
+    if (body.nextDueDate) body.nextDueDate = new Date(body.nextDueDate);
 
     // Calculate remaining fee if totalFee or totalPaid are updated/present
     const newTotalFee = body.totalFee !== undefined ? Number(body.totalFee) : existingStudent.totalFee || 0;
