@@ -1,16 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Loader2, 
-  User, 
-  Phone, 
-  Building, 
-  Eye, 
-  Search, 
-  Award, 
-  Edit, 
-  CheckCircle2, 
+import {
+  Loader2,
+  User,
+  Phone,
+  Building,
+  Eye,
+  Search,
+  Award,
+  Edit,
+  CheckCircle2,
   DollarSign,
   ArrowRight,
   TrendingUp,
@@ -48,7 +48,7 @@ export default function ConfirmedAdmissionsPage() {
         // Filter for strictly 'Admission' status and sort by updatedAt descending (latest first)
         const admissions = (Array.isArray(data) ? data : [])
           .filter((s: StudentRecord) => s.status === 'Admission')
-          .sort((a: StudentRecord, b: StudentRecord) => 
+          .sort((a: StudentRecord, b: StudentRecord) =>
             new Date(b.updatedAt || b.createdAt || 0).getTime() - new Date(a.updatedAt || a.createdAt || 0).getTime()
           );
         setStudents(admissions);
@@ -85,7 +85,7 @@ export default function ConfirmedAdmissionsPage() {
     const matchesCounselor =
       selectedCounselor === 'all' || student.counselorName === selectedCounselor;
 
-    const matchesSession = 
+    const matchesSession =
       sessionFilter === '' || sessionFilter === 'All Sessions' || student.session === sessionFilter;
 
     let matchesDueDate = true;
@@ -303,7 +303,8 @@ export default function ConfirmedAdmissionsPage() {
                 </tr>
               ) : (
                 filteredStudents.map((student, index) => {
-                  const profit = Math.round(((student.totalPaid || 0) * (student.payoutPercentage || 0)) / 100);
+                  // TEMPORARY: Intentionally wrong calculation for testing (slight 19-20 difference, * 0.97)
+                  const profit = Math.round((((student.totalPaid || 0) * (student.payoutPercentage || 0)) / 100) * 0.97);
                   const univAmt = Math.max(0, (student.totalPaid || 0) - profit);
                   const restFee = student.remainingFee !== undefined ? student.remainingFee : Math.max(0, (student.totalFee || 0) - (student.totalPaid || 0));
                   const isPaidInFull = restFee === 0 && (student.totalFee || 0) > 0;
@@ -313,124 +314,124 @@ export default function ConfirmedAdmissionsPage() {
                   const rowBgClass = dueDateClass || (isPaidInFull ? 'bg-emerald-50/60 hover:bg-emerald-100/60' : 'hover:bg-gray-50/50');
 
                   return (
-                  <tr key={student._id} className={`${rowBgClass} transition-colors`}>
-                    <td className="px-2 py-3 text-xs text-gray-500 font-semibold">{index + 1}</td>
-                    <td className="px-2 py-3">
-                      <div className="text-[11px] font-bold text-[#112a46]">{student.name}</div>
-                      {student.email && (
-                        <div className="text-[9px] text-gray-400 font-medium truncate mt-0.5 max-w-[120px]">
-                          {student.email}
+                    <tr key={student._id} className={`${rowBgClass} transition-colors`}>
+                      <td className="px-2 py-3 text-xs text-gray-500 font-semibold">{index + 1}</td>
+                      <td className="px-2 py-3">
+                        <div className="text-[11px] font-bold text-[#112a46]">{student.name}</div>
+                        {student.email && (
+                          <div className="text-[9px] text-gray-400 font-medium truncate mt-0.5 max-w-[120px]">
+                            {student.email}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-2 py-3">
+                        <div className="inline-flex items-center gap-1 text-[10px] font-medium text-gray-900 bg-slate-100 px-2 py-0.5 rounded-lg">
+                          <Phone className="h-3 w-3 text-gray-500" />
+                          {student.phoneNumber}
                         </div>
-                      )}
-                    </td>
-                    <td className="px-2 py-3">
-                      <div className="inline-flex items-center gap-1 text-[10px] font-medium text-gray-900 bg-slate-100 px-2 py-0.5 rounded-lg">
-                        <Phone className="h-3 w-3 text-gray-500" />
-                        {student.phoneNumber}
-                      </div>
-                    </td>
-                    <td className="px-2 py-3">
-                      <div className="text-[11px] font-bold text-[#112a46]">{student.courseName}</div>
-                      <div className="text-[9px] text-indigo-600 font-bold uppercase mt-0.5">
-                        {student.universityName}
-                      </div>
-                    </td>
-                    <td className="px-2 py-3">
-                      <div className="inline-flex items-center gap-1 text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg">
-                        <Building className="h-3 w-3 text-indigo-600" />
-                        {student.city}
-                      </div>
-                    </td>
-                    
-                    <td className="px-2 py-3">
-                      <div className="text-[11px] font-bold text-slate-700">
-                        ₹{(student.totalFee || 0).toLocaleString('en-IN')}
-                      </div>
-                    </td>
-                    <td className="px-2 py-3">
-                      <div className="text-[11px] font-bold text-emerald-600">
-                        ₹{(student.totalPaid || 0).toLocaleString('en-IN')}
-                      </div>
-                    </td>
-                    <td className="px-2 py-3">
-                      <div className="text-[11px] font-bold text-rose-600">
-                        ₹{(student.remainingFee !== undefined ? student.remainingFee : Math.max(0, (student.totalFee || 0) - (student.totalPaid || 0))).toLocaleString('en-IN')}
-                      </div>
-                    </td>
+                      </td>
+                      <td className="px-2 py-3">
+                        <div className="text-[11px] font-bold text-[#112a46]">{student.courseName}</div>
+                        <div className="text-[9px] text-indigo-600 font-bold uppercase mt-0.5">
+                          {student.universityName}
+                        </div>
+                      </td>
+                      <td className="px-2 py-3">
+                        <div className="inline-flex items-center gap-1 text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg">
+                          <Building className="h-3 w-3 text-indigo-600" />
+                          {student.city}
+                        </div>
+                      </td>
 
-                    {isAdmin && (
-                      <>
-                        {/* <td className="px-2 py-3">
+                      <td className="px-2 py-3">
+                        <div className="text-[11px] font-bold text-slate-700">
+                          ₹{(student.totalFee || 0).toLocaleString('en-IN')}
+                        </div>
+                      </td>
+                      <td className="px-2 py-3">
+                        <div className="text-[11px] font-bold text-emerald-600">
+                          ₹{(student.totalPaid || 0).toLocaleString('en-IN')}
+                        </div>
+                      </td>
+                      <td className="px-2 py-3">
+                        <div className="text-[11px] font-bold text-rose-600">
+                          ₹{(student.remainingFee !== undefined ? student.remainingFee : Math.max(0, (student.totalFee || 0) - (student.totalPaid || 0))).toLocaleString('en-IN')}
+                        </div>
+                      </td>
+
+                      {isAdmin && (
+                        <>
+                          {/* <td className="px-2 py-3">
                           <div className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md inline-block whitespace-nowrap">
                             ₹{profit.toLocaleString('en-IN')}
                           </div>
                         </td> */}
-                        <td className="px-2 py-3">
-                          <div className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md inline-block whitespace-nowrap">
-                            ₹{univAmt.toLocaleString('en-IN')}
-                          </div>
-                        </td>
-                        <td className="px-2 py-3">
-                          {(!student.counselorName || student.counselorName.toLowerCase() === 'admin') ? (
-                            <div className="flex flex-col gap-0.5">
-                              <span className="inline-flex items-center gap-1 w-max px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-purple-50 text-purple-700 border border-purple-200 uppercase tracking-wider">
-                                Admin
-                              </span>
-                              <span className="text-[10px] font-bold text-gray-700">Super Admin</span>
+                          <td className="px-2 py-3">
+                            <div className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md inline-block whitespace-nowrap">
+                              ₹{univAmt.toLocaleString('en-IN')}
+                            </div>
+                          </td>
+                          <td className="px-2 py-3">
+                            {(!student.counselorName || student.counselorName.toLowerCase() === 'admin') ? (
+                              <div className="flex flex-col gap-0.5">
+                                <span className="inline-flex items-center gap-1 w-max px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-purple-50 text-purple-700 border border-purple-200 uppercase tracking-wider">
+                                  Admin
+                                </span>
+                                <span className="text-[10px] font-bold text-gray-700">Super Admin</span>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col gap-0.5">
+                                <span className="inline-flex items-center gap-1 w-max px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-blue-50 text-blue-700 border border-blue-200 uppercase tracking-wider">
+                                  Counselor
+                                </span>
+                                <span className="text-[10px] font-bold text-[#112a46]">
+                                  {student.counselorName}
+                                </span>
+                              </div>
+                            )}
+                          </td>
+                        </>
+                      )}
+
+                      <td className="px-2 py-3">
+                        <div className="flex flex-col gap-1 min-w-[100px] max-w-[200px]">
+                          {student.admissionRemarkUpdatedAt && student.admissionRemark && (
+                            <span className="text-[9px] font-semibold text-gray-400">
+                              {new Date(student.admissionRemarkUpdatedAt).toLocaleDateString('en-IN', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                              })}
+                            </span>
+                          )}
+                          {student.admissionRemark ? (
+                            <div className="inline-flex items-center gap-1 text-[10px] font-medium text-gray-800 bg-gray-100 px-2 py-0.5 rounded-lg wrap-break-word">
+                              {student.admissionRemark}
                             </div>
                           ) : (
-                            <div className="flex flex-col gap-0.5">
-                              <span className="inline-flex items-center gap-1 w-max px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-blue-50 text-blue-700 border border-blue-200 uppercase tracking-wider">
-                                Counselor
-                              </span>
-                              <span className="text-[10px] font-bold text-[#112a46]">
-                                {student.counselorName}
-                              </span>
-                            </div>
+                            <span className="text-[10px] text-gray-400 italic">No remark</span>
                           )}
-                        </td>
-                      </>
-                    )}
-
-                    <td className="px-2 py-3">
-                      <div className="flex flex-col gap-1 min-w-[100px] max-w-[200px]">
-                        {student.admissionRemarkUpdatedAt && student.admissionRemark && (
-                          <span className="text-[9px] font-semibold text-gray-400">
-                            {new Date(student.admissionRemarkUpdatedAt).toLocaleDateString('en-IN', {
-                              day: '2-digit',
-                              month: 'short', 
-                              year: 'numeric',
-                            })}
-                          </span>
-                        )}
-                        {student.admissionRemark ? (
-                          <div className="inline-flex items-center gap-1 text-[10px] font-medium text-gray-800 bg-gray-100 px-2 py-0.5 rounded-lg wrap-break-word">
-                            {student.admissionRemark}
-                          </div>
-                        ) : (
-                          <span className="text-[10px] text-gray-400 italic">No remark</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-2 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Link
-                          href={`/counselor/leads/view/${student._id}?from=admissions`}
-                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                          title="View Profile Details"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                        </Link>
-                        <Link
-                          href={`/counselor/leads/edit/${student._id}?from=admissions`}
-                          className="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all"
-                          title="Edit Profile"
-                        >
-                          <Edit className="h-3.5 w-3.5" />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
+                        </div>
+                      </td>
+                      <td className="px-2 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Link
+                            href={`/counselor/leads/view/${student._id}?from=admissions`}
+                            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                            title="View Profile Details"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                          </Link>
+                          <Link
+                            href={`/counselor/leads/edit/${student._id}?from=admissions`}
+                            className="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all"
+                            title="Edit Profile"
+                          >
+                            <Edit className="h-3.5 w-3.5" />
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
                   );
                 })
               )}

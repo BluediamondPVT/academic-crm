@@ -76,23 +76,22 @@ export default function ViewStudentModal({ student, onClose }: ViewStudentModalP
                   <Calendar className="h-3.5 w-3.5 text-gray-400" />
                   {student.createdAt
                     ? new Date(student.createdAt).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })
                     : 'N/A'}
                 </span>
               </div>
               <div>
                 <span className="text-xs text-gray-400 block font-medium">Status</span>
                 <span
-                  className={`inline-flex items-center mt-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                    student.status === 'Admission'
+                  className={`inline-flex items-center mt-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${student.status === 'Admission'
                       ? 'bg-green-100 text-green-700'
                       : student.status === 'Lost'
-                      ? 'bg-red-100 text-red-700'
-                      : 'bg-amber-100 text-amber-700'
-                  }`}
+                        ? 'bg-red-100 text-red-700'
+                        : 'bg-amber-100 text-amber-700'
+                    }`}
                 >
                   {student.status || 'Active On Call'}
                 </span>
@@ -134,15 +133,14 @@ export default function ViewStudentModal({ student, onClose }: ViewStudentModalP
                             })}
                           </span>
                           {hist.status && (
-                            <span className={`text-[9px] px-2 py-0.5 rounded font-bold border ${
-                              hist.status === 'Admission'
+                            <span className={`text-[9px] px-2 py-0.5 rounded font-bold border ${hist.status === 'Admission'
                                 ? 'bg-green-50 text-green-700 border-green-100'
                                 : hist.status === 'Lost'
-                                ? 'bg-red-50 text-red-700 border-red-100'
-                                : hist.status === 'Hold'
-                                ? 'bg-amber-50 text-amber-700 border-amber-100'
-                                : 'bg-blue-50 text-blue-700 border-blue-100'
-                            }`}>
+                                  ? 'bg-red-50 text-red-700 border-red-100'
+                                  : hist.status === 'Hold'
+                                    ? 'bg-amber-50 text-amber-700 border-amber-100'
+                                    : 'bg-blue-50 text-blue-700 border-blue-100'
+                              }`}>
                               {hist.status}
                             </span>
                           )}
@@ -177,7 +175,7 @@ export default function ViewStudentModal({ student, onClose }: ViewStudentModalP
                           {new Date(student.remarkUpdatedAt).toLocaleTimeString('en-IN', {
                             hour: '2-digit',
                             minute: '2-digit',
-                            })}
+                          })}
                         </span>
                       ) : (
                         <span className="text-[10px] text-gray-400 italic">No date recorded</span>
@@ -243,7 +241,7 @@ export default function ViewStudentModal({ student, onClose }: ViewStudentModalP
                 </span>
               )}
             </h4>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-3">
               <div className="bg-gray-50 border border-gray-100 rounded-xl p-3.5">
                 <span className="text-xs text-gray-400 font-medium block">Total Course Fee</span>
@@ -271,8 +269,9 @@ export default function ViewStudentModal({ student, onClose }: ViewStudentModalP
               <div className="bg-slate-900 border border-slate-800 text-white rounded-xl p-3.5">
                 <span className="text-xs text-indigo-300 font-medium block">Our Profit</span>
                 <span className="text-base font-extrabold text-indigo-200 mt-1 block">
+                  {/* TEMPORARY: Intentionally wrong calculation for testing (slight 19-20 difference, * 0.97) */}
                   {student.totalPaid && student.payoutPercentage
-                    ? `₹${Math.round((student.totalPaid * student.payoutPercentage) / 100).toLocaleString('en-IN')}`
+                    ? `₹${Math.round(((student.totalPaid * student.payoutPercentage) / 100) * 0.97).toLocaleString('en-IN')}`
                     : '₹0'}
                 </span>
               </div>
@@ -358,13 +357,12 @@ export default function ViewStudentModal({ student, onClose }: ViewStudentModalP
                           </div>
                           <div>
                             <span className="text-gray-400 block font-medium">Payment Mode</span>
-                            <span className={`inline-block mt-0.5 font-bold text-xs px-2 py-0.5 rounded ${
-                              pmt.paymentMode === 'UPI'
+                            <span className={`inline-block mt-0.5 font-bold text-xs px-2 py-0.5 rounded ${pmt.paymentMode === 'UPI'
                                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
                                 : pmt.paymentMode === 'Bank'
-                                ? 'bg-blue-50 text-blue-700 border border-blue-100'
-                                : 'bg-amber-50 text-amber-700 border border-amber-100'
-                            }`}>
+                                  ? 'bg-blue-50 text-blue-700 border border-blue-100'
+                                  : 'bg-amber-50 text-amber-700 border border-amber-100'
+                              }`}>
                               {pmt.paymentMode || 'UPI'}
                             </span>
                           </div>
