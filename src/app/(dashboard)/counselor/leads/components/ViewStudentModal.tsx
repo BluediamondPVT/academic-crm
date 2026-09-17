@@ -255,7 +255,7 @@ export default function ViewStudentModal({ student, onClose }: ViewStudentModalP
               <div className="bg-emerald-50/60 border border-emerald-100 rounded-xl p-3.5">
                 <span className="text-xs text-emerald-600 font-bold block">Total Paid</span>
                 <span className="text-base font-extrabold text-emerald-950 mt-1 block">
-                  {(student.totalPaid || student.otherAmount) ? `₹{((student.totalPaid || 0) + (student.otherAmount || 0)).toLocaleString('en-IN')}` : '₹0'}
+                  {(student.totalPaid || student.otherAmount) ? `₹${((student.totalPaid || 0) + (student.otherAmount || 0)).toLocaleString('en-IN')}` : '₹0'}
                 </span>
               </div>
 
@@ -269,9 +269,11 @@ export default function ViewStudentModal({ student, onClose }: ViewStudentModalP
               <div className="bg-slate-900 border border-slate-800 text-white rounded-xl p-3.5">
                 <span className="text-xs text-indigo-300 font-medium block">Our Profit</span>
                 <span className="text-base font-extrabold text-indigo-200 mt-1 block">
-                  {student.totalPaid && student.payoutPercentage
-                    ? `₹${Math.round((student.totalPaid * student.payoutPercentage) / 100).toLocaleString('en-IN')}`
-                    : '₹0'}
+                  {student.profit !== undefined && student.profit > 0
+                    ? `₹${student.profit.toLocaleString('en-IN')}`
+                    : student.totalPaid && student.payoutPercentage
+                      ? `₹${Math.round((student.totalPaid * student.payoutPercentage) / 100).toLocaleString('en-IN')}`
+                      : '₹0'}
                 </span>
               </div>
             </div>
@@ -308,9 +310,18 @@ export default function ViewStudentModal({ student, onClose }: ViewStudentModalP
               {student.payments && student.payments.length > 0 ? (
                 <div className="space-y-3">
                   {student.payments.map((pmt, idx) => {
+                    const pmtOther = pmt.otherAmount !== undefined && pmt.otherAmount > 0
+                      ? pmt.otherAmount
+                      : (idx === 0 && student.otherAmount ? student.otherAmount : 0);
+                    const pmtPaidTotal = (pmt.amount || 0) + pmtOther;
                     const cumulativePaid = student.payments!
                       .slice(0, idx + 1)
-                      .reduce((acc, curr) => acc + (curr.amount || 0), 0);
+                      .reduce((acc, curr, i) => {
+                        const oth = curr.otherAmount !== undefined && curr.otherAmount > 0
+                          ? curr.otherAmount
+                          : (i === 0 && student.otherAmount ? student.otherAmount : 0);
+                        return acc + (curr.amount || 0) + oth;
+                      }, 0);
                     const totalCourseFee = Number(student.totalFee || 0);
                     const balanceAfter = Math.max(0, totalCourseFee - cumulativePaid);
 
@@ -345,7 +356,7 @@ export default function ViewStudentModal({ student, onClose }: ViewStudentModalP
                           <div>
                             <span className="text-gray-400 block font-medium">Amount Paid</span>
                             <span className="text-sm font-black text-emerald-600 block mt-0.5">
-                              ₹{pmt.amount ? pmt.amount.toLocaleString('en-IN') : '0'}
+                              ₹{pmtPaidTotal.toLocaleString('en-IN')}
                             </span>
                           </div>
                           <div>
@@ -390,7 +401,7 @@ export default function ViewStudentModal({ student, onClose }: ViewStudentModalP
                     );
                   })}
                 </div>
-              ) : student.totalPaid && student.totalPaid > 0 ? (
+              ) : (student.totalPaid || student.otherAmount) ? (
                 <div className="bg-white border border-gray-200/80 rounded-xl p-4 shadow-xs">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-2.5">
                     <div className="flex items-center gap-2">
@@ -404,13 +415,13 @@ export default function ViewStudentModal({ student, onClose }: ViewStudentModalP
                     <div>
                       <span className="text-gray-400 block font-medium">Paid Amount</span>
                       <span className="text-sm font-black text-emerald-600 block mt-0.5">
-                        ₹{student.totalPaid.toLocaleString('en-IN')}
+                        ₹{((student.totalPaid || 0) + (student.otherAmount || 0)).toLocaleString('en-IN')}
                       </span>
                     </div>
                     <div>
                       <span className="text-gray-400 block font-medium">Remaining Balance</span>
                       <span className="text-sm font-black text-rose-600 block mt-0.5">
-                        ₹{(student.remainingFee !== undefined ? student.remainingFee : Math.max(0, (student.totalFee || 0) - student.totalPaid)).toLocaleString('en-IN')}
+                        ₹{(student.remainingFee !== undefined ? student.remainingFee : Math.max(0, (student.totalFee || 0) - (student.totalPaid || 0))).toLocaleString('en-IN')}
                       </span>
                     </div>
                     <div>

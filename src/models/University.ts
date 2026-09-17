@@ -46,7 +46,7 @@ const UniversitySchema: Schema = new Schema(
     },
     payout: { type: String, required: true },
     websiteUrl: { type: String, required: true },
-    courses: { type: [CourseSchema], required: true },
+    courses: { type: [CourseSchema], required: true }, 
   },
   { timestamps: true }
 );

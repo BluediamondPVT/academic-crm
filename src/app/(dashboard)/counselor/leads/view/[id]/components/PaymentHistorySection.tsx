@@ -25,9 +25,18 @@ export const PaymentHistorySection: React.FC<PaymentHistorySectionProps> = ({ st
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {student.payments && student.payments.length > 0 ? (
           student.payments.map((pmt, idx) => {
+            const pmtOther = pmt.otherAmount !== undefined && pmt.otherAmount > 0
+              ? pmt.otherAmount
+              : (idx === 0 && student.otherAmount ? student.otherAmount : 0);
+            const pmtPaidTotal = (pmt.amount || 0) + pmtOther;
             const cumulativePaid = student.payments!
               .slice(0, idx + 1)
-              .reduce((acc, curr) => acc + (curr.amount || 0), 0);
+              .reduce((acc, curr, i) => {
+                const oth = curr.otherAmount !== undefined && curr.otherAmount > 0 
+                  ? curr.otherAmount 
+                  : (i === 0 && student.otherAmount ? student.otherAmount : 0);
+                return acc + (curr.amount || 0) + oth;
+              }, 0);
             const totalCourseFee = Number(student.totalFee || 0);
             const balanceAfter = Math.max(0, totalCourseFee - cumulativePaid);
 
@@ -63,7 +72,7 @@ export const PaymentHistorySection: React.FC<PaymentHistorySectionProps> = ({ st
                     <div>
                       <span className="text-slate-400 block font-medium text-[10px] uppercase">Paid Amount</span>
                       <span className="text-sm font-black text-emerald-600 block mt-0.5">
-                        ₹{pmt.amount ? pmt.amount.toLocaleString('en-IN') : '0'}
+                        ₹{pmtPaidTotal.toLocaleString('en-IN')}
                       </span>
                     </div>
                     <div>
@@ -103,7 +112,7 @@ export const PaymentHistorySection: React.FC<PaymentHistorySectionProps> = ({ st
                 <div className="mt-3.5 pt-2.5 border-t border-slate-200/60 flex justify-end">
                   <button
                     type="button"
-                    onClick={() => generatePaySlip(student, pmt as PaymentItem, idx, balanceAfter, cumulativePaid)}
+                    onClick={() => generatePaySlip(student, { ...pmt, amount: pmtPaidTotal } as PaymentItem, idx, balanceAfter, cumulativePaid)}
                     className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50/80 hover:bg-indigo-100/80 px-3 py-1.5 rounded-lg border border-indigo-150 transition-colors shadow-xs cursor-pointer active:scale-95"
                   >
                     <Download className="h-3.5 w-3.5" />
@@ -113,7 +122,7 @@ export const PaymentHistorySection: React.FC<PaymentHistorySectionProps> = ({ st
               </div>
             );
           })
-        ) : student.totalPaid && student.totalPaid > 0 ? (
+        ) : (student.totalPaid || student.otherAmount) ? (
           <div className="bg-slate-50/80 border border-slate-200/60 rounded-xl p-4 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between border-b border-slate-200/60 pb-2.5">
@@ -126,13 +135,13 @@ export const PaymentHistorySection: React.FC<PaymentHistorySectionProps> = ({ st
                 <div>
                   <span className="text-slate-400 block font-medium text-[10px] uppercase">Paid Amount</span>
                   <span className="text-sm font-black text-emerald-600 block mt-0.5">
-                    ₹{student.totalPaid.toLocaleString('en-IN')}
+                    ₹{((student.totalPaid || 0) + (student.otherAmount || 0)).toLocaleString('en-IN')}
                   </span>
                 </div>
                 <div>
                   <span className="text-slate-400 block font-medium text-[10px] uppercase">Remaining Balance</span>
                   <span className="text-sm font-black text-rose-600 block mt-0.5">
-                    ₹{(student.remainingFee !== undefined ? student.remainingFee : Math.max(0, (student.totalFee || 0) - student.totalPaid)).toLocaleString('en-IN')}
+                    ₹{(student.remainingFee !== undefined ? student.remainingFee : Math.max(0, (student.totalFee || 0) - (student.totalPaid || 0))).toLocaleString('en-IN')}
                   </span>
                 </div>
                 <div>
@@ -148,13 +157,14 @@ export const PaymentHistorySection: React.FC<PaymentHistorySectionProps> = ({ st
               <button
                 type="button"
                 onClick={() => {
+                  const initialPaidTotal = (student.totalPaid || 0) + (student.otherAmount || 0);
                   const balanceAfter = student.remainingFee !== undefined 
                     ? student.remainingFee 
-                    : Math.max(0, (student.totalFee || 0) - student.totalPaid!);
+                    : Math.max(0, (student.totalFee || 0) - (student.totalPaid || 0));
                   generatePaySlip(
                     student,
                     {
-                      amount: student.totalPaid!,
+                      amount: initialPaidTotal,
                       date: student.createdAt || new Date().toISOString(),
                       paymentMode: 'UPI / Bank',
                       paymentType: 'Initial Payment',
@@ -162,7 +172,7 @@ export const PaymentHistorySection: React.FC<PaymentHistorySectionProps> = ({ st
                     },
                     0,
                     balanceAfter,
-                    student.totalPaid!
+                    initialPaidTotal
                   );
                 }}
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50/80 hover:bg-indigo-100/80 px-3 py-1.5 rounded-lg border border-indigo-150 transition-colors shadow-xs cursor-pointer active:scale-95"

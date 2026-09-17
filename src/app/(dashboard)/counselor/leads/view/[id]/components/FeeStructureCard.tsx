@@ -48,7 +48,7 @@ export const FeeStructureCard: React.FC<FeeStructureCardProps> = ({ student }) =
           <div className="bg-emerald-50/50 border border-emerald-100/60 rounded-xl p-3 hover:bg-emerald-50 transition-colors">
             <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-600 block">Total Paid</span>
             <span className="text-sm font-black text-emerald-950 mt-0.5 block">
-              {(student.totalPaid || student.otherAmount) ? `₹{((student.totalPaid || 0) + (student.otherAmount || 0)).toLocaleString('en-IN')}` : '₹0'}
+              {(student.totalPaid || student.otherAmount) ? `₹${((student.totalPaid || 0) + (student.otherAmount || 0)).toLocaleString('en-IN')}` : '₹0'}
             </span>
           </div>
 
@@ -86,19 +86,22 @@ export const FeeStructureCard: React.FC<FeeStructureCardProps> = ({ student }) =
         )}
 
         {/* Payout & Profit */}
-        {student.payoutPercentage !== undefined && student.payoutPercentage > 0 && (
+        {((student.payoutPercentage !== undefined && student.payoutPercentage > 0) || (student.profit !== undefined && student.profit > 0)) && (
           <div className="grid grid-cols-2 gap-3 border-t border-slate-100/60 pt-3">
             <div className="bg-indigo-50/50 border border-indigo-100/60 rounded-xl p-3 hover:bg-indigo-50 transition-colors">
               <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-600 block">Payout Ratio</span>
               <span className="text-sm font-black text-indigo-950 mt-0.5 block">
-                {student.payoutPercentage}%
+                {student.payoutPercentage ? `${student.payoutPercentage}%` : 'N/A'}
               </span>
             </div>
 
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 text-white hover:bg-slate-800 transition-colors">
               <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-300 block">Our Profit</span>
               <span className="text-sm font-black text-indigo-200 mt-0.5 block">
-                ₹{Math.round(((student.totalPaid || 0) * (student.payoutPercentage || 0)) / 100).toLocaleString('en-IN')}
+                ₹{(student.profit !== undefined && student.profit > 0
+                  ? student.profit
+                  : Math.round(((student.totalPaid || 0) * (student.payoutPercentage || 0)) / 100)
+                ).toLocaleString('en-IN')}
               </span>
             </div>
           </div>

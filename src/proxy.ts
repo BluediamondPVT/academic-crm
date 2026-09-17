@@ -31,7 +31,7 @@ export function proxy(request: NextRequest) {
       if (!pathname.startsWith('/counselor') && !pathname.startsWith('/workspace')) {
         return NextResponse.redirect(new URL('/counselor', request.url));
       }
-    }
+    } 
 
     // 🔒 ACADEMIC ROLE SECURITY:
     if (userRole === ROLES.ACADEMIC) {
