@@ -5,8 +5,10 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { 
   Building, MapPin, Phone, Globe, DollarSign, GraduationCap, Award, 
-  ArrowLeft, Edit2, ExternalLink, Sparkles, CheckCircle2, Calendar
+  ArrowLeft, Edit2, ExternalLink, Sparkles, CheckCircle2, Calendar,
+  Mail, MessageCircle
 } from 'lucide-react';
+import { calculateOurCut, parsePayoutPercentage } from '@/utils/payout';
 
 interface Course {
   name: string;
@@ -15,12 +17,24 @@ interface Course {
   totalFee: number;
   yearFee: number;
   semesterFee: number;
+  payoutPercentage?: number;
 }
+
+export interface AggregatorDetails {
+  name: string;
+  email?: string;
+  number?: string;
+  location?: string;
+  whatsapp?: string;
+}
+
+export type AggregationDetails = AggregatorDetails;
 
 interface UniversityDetails {
   _id: string;
   name: string;
-  aggregation: string;
+  aggregator?: AggregatorDetails | string;
+  aggregation?: AggregatorDetails | string;
   location: string;
   contactPersonMobile: string;
   modeOfLearning: 'Online' | 'Distance' | 'Regular';
@@ -156,7 +170,12 @@ export default function ViewUniversityPage() {
                   </span>
                   <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
                     <Award className="h-3.5 w-3.5" />
-                    {university.aggregation}
+                    {(() => {
+                      const agg = university.aggregator || university.aggregation;
+                      return typeof agg === 'object' && agg !== null
+                        ? agg.name || 'N/A'
+                        : agg || 'N/A';
+                    })()}
                   </span>
                 </div>
 
@@ -180,102 +199,208 @@ export default function ViewUniversityPage() {
         </div>
 
         {/* Detailed Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* General Information Card */}
-          <div className="bg-white rounded-3xl p-7 shadow-[0_4px_20px_-4px_rgba(17,42,70,0.08)] border border-gray-100/80 space-y-5">
-            <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
-              <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                <Building className="h-5 w-5 text-[#112a46]" />
+        {(() => {
+          const agg = university.aggregator || university.aggregation;
+          const aggregatorData: AggregatorDetails = typeof agg === 'object' && agg !== null
+            ? agg
+            : { name: (typeof agg === 'string' ? agg : '') };
+
+          return (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+              {/* General Information Card */}
+              <div className="bg-white rounded-3xl p-7 shadow-[0_4px_20px_-4px_rgba(17,42,70,0.08)] border border-gray-100/80 space-y-5">
+                <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
+                  <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                    <Building className="h-5 w-5 text-[#112a46]" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-[#112a46]">Institutional Overview</h3>
+                    <p className="text-xs text-gray-500">University profile & contact records</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                      University Name
+                    </p>
+                    <p className="text-base font-bold text-[#112a46]">{university.name}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                      Location Address
+                    </p>
+                    <p className="text-sm font-semibold text-gray-800 flex items-center gap-1.5">
+                      <MapPin className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                      <span>{university.location}</span>
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                      Contact Person Mobile
+                    </p>
+                    <a
+                      href={`tel:${university.contactPersonMobile}`}
+                      className="text-sm font-semibold text-[#112a46] hover:text-blue-600 flex items-center gap-1.5"
+                    >
+                      <Phone className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                      <span>{university.contactPersonMobile}</span>
+                    </a>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                      Mode of Learning
+                    </p>
+                    <span className="inline-flex items-center px-3 py-1 rounded-lg text-sm font-bold bg-gray-100 text-gray-800">
+                      {university.modeOfLearning}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h3 className="text-base font-bold text-[#112a46]">Institutional Overview</h3>
-                <p className="text-xs text-gray-500">Accreditation & contact records</p>
+
+              {/* Aggregator Details Card */}
+              <div className="bg-white rounded-3xl p-7 shadow-[0_4px_20px_-4px_rgba(17,42,70,0.08)] border border-blue-100/60 space-y-5 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50/60 rounded-full blur-2xl pointer-events-none" />
+                <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
+                  <div className="h-10 w-10 rounded-xl bg-purple-50 flex items-center justify-center">
+                    <Award className="h-5 w-5 text-purple-700" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-[#112a46]">Aggregator Details</h3>
+                    <p className="text-xs text-gray-500">Affiliation & aggregator partner contact records</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                      Aggregator Name
+                    </p>
+                    <p className="text-base font-bold text-[#112a46] flex items-center gap-1.5">
+                      <Award className="h-4 w-4 text-purple-600 shrink-0" />
+                      <span>{aggregatorData.name || 'Not Specified'}</span>
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                      Aggregator Email
+                    </p>
+                    {aggregatorData.email ? (
+                      <a
+                        href={`mailto:${aggregatorData.email}`}
+                        className="text-sm font-semibold text-blue-600 hover:underline flex items-center gap-1.5"
+                      >
+                        <Mail className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                        <span className="break-all">{aggregatorData.email}</span>
+                      </a>
+                    ) : (
+                      <p className="text-sm text-gray-400 font-medium">N/A</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                      Contact Phone
+                    </p>
+                    {aggregatorData.number ? (
+                      <a
+                        href={`tel:${aggregatorData.number}`}
+                        className="text-sm font-semibold text-[#112a46] hover:text-blue-600 flex items-center gap-1.5"
+                      >
+                        <Phone className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                        <span>{aggregatorData.number}</span>
+                      </a>
+                    ) : (
+                      <p className="text-sm text-gray-400 font-medium">N/A</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                      Location
+                    </p>
+                    {aggregatorData.location ? (
+                      <p className="text-sm font-semibold text-gray-800 flex items-center gap-1.5">
+                        <MapPin className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                        <span>{aggregatorData.location}</span>
+                      </p>
+                    ) : (
+                      <p className="text-sm text-gray-400 font-medium">N/A</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                      WhatsApp Contact
+                    </p>
+                    {aggregatorData.whatsapp ? (
+                      <a
+                        href={`https://wa.me/${aggregatorData.whatsapp.replace(/[^0-9]/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs rounded-xl transition-colors border border-emerald-200"
+                      >
+                        <MessageCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                        <span>{aggregatorData.whatsapp}</span>
+                        <span className="text-[10px] bg-emerald-600 text-white px-1.5 py-0.5 rounded-full uppercase ml-1">Chat</span>
+                      </a>
+                    ) : (
+                      <p className="text-sm text-gray-400 font-medium">N/A</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Financial & Operations */}
+              <div className="bg-white rounded-3xl p-7 shadow-[0_4px_20px_-4px_rgba(17,42,70,0.08)] border border-gray-100/80 space-y-5">
+                <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
+                  <div className="h-10 w-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                    <DollarSign className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-[#112a46]">Financial & Operations</h3>
+                    <p className="text-xs text-gray-500">Commission terms & web presence</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                      Commission Payout Structure
+                    </p>
+                    <p className="text-base font-bold text-emerald-700 bg-emerald-50/60 px-3.5 py-2 rounded-xl border border-emerald-100 inline-block">
+                      {university.payout}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                      Official Website
+                    </p>
+                    <a
+                      href={
+                        university.websiteUrl.startsWith('http')
+                          ? university.websiteUrl
+                          : `https://${university.websiteUrl}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-semibold text-blue-600 hover:underline flex items-center gap-1.5"
+                    >
+                      <Globe className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                      <span className="break-all">{university.websiteUrl}</span>
+                      <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
-
-            <div className="space-y-4">
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-                  University Name
-                </p>
-                <p className="text-base font-bold text-[#112a46]">{university.name}</p>
-              </div>
-
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-                  Aggregation / Affiliation
-                </p>
-                <p className="text-sm font-semibold text-gray-800">{university.aggregation}</p>
-              </div>
-
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-                  Location Address
-                </p>
-                <p className="text-sm font-semibold text-gray-800">{university.location}</p>
-              </div>
-
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-                  Contact Mobile Number
-                </p>
-                <p className="text-sm font-semibold text-[#112a46]">{university.contactPersonMobile}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Academic & Financial Setup */}
-          <div className="bg-white rounded-3xl p-7 shadow-[0_4px_20px_-4px_rgba(17,42,70,0.08)] border border-gray-100/80 space-y-5">
-            <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
-              <div className="h-10 w-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                <DollarSign className="h-5 w-5 text-emerald-600" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-[#112a46]">Financial & Operations</h3>
-                <p className="text-xs text-gray-500">Commission terms & web presence</p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-                  Mode of Learning
-                </p>
-                <span className="inline-flex items-center px-3 py-1 rounded-lg text-sm font-bold bg-gray-100 text-gray-800">
-                  {university.modeOfLearning}
-                </span>
-              </div>
-
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-                  Commission Payout Structure
-                </p>
-                <p className="text-base font-bold text-emerald-700 bg-emerald-50/60 px-3.5 py-2 rounded-xl border border-emerald-100 inline-block">
-                  {university.payout}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-                  Official Website
-                </p>
-                <a
-                  href={
-                    university.websiteUrl.startsWith('http')
-                      ? university.websiteUrl
-                      : `https://${university.websiteUrl}`
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm font-semibold text-blue-600 hover:underline flex items-center gap-1.5"
-                >
-                  <span>{university.websiteUrl}</span>
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* Offered Courses Card */}
         <div className="bg-white rounded-3xl p-7 shadow-[0_4px_20px_-4px_rgba(17,42,70,0.08)] border border-gray-100/80 overflow-hidden">
@@ -301,6 +426,9 @@ export default function ViewUniversityPage() {
                   <th className="px-5 py-3.5 font-bold uppercase tracking-wider text-xs">Course & Specialization</th>
                   <th className="px-5 py-3.5 font-bold uppercase tracking-wider text-xs text-center">Duration</th>
                   <th className="px-5 py-3.5 font-bold uppercase tracking-wider text-xs text-right bg-[#112a46]/95">Total Fee</th>
+                  <th className="px-5 py-3.5 font-bold uppercase tracking-wider text-xs text-right bg-emerald-600/30 text-emerald-200">
+                    Our Cut {parsePayoutPercentage(university.payout) > 0 ? `(${parsePayoutPercentage(university.payout)}%)` : ''}
+                  </th>
                   <th className="px-5 py-3.5 font-bold uppercase tracking-wider text-xs text-right bg-[#10b981]/15 text-emerald-100">Per Year Fee</th>
                   <th className="px-5 py-3.5 font-bold uppercase tracking-wider text-xs text-right bg-[#3b82f6]/15 text-blue-100">Semester Fee</th>
                 </tr>
@@ -314,8 +442,15 @@ export default function ViewUniversityPage() {
                       duration: 3,
                       totalFee: 0,
                       yearFee: 0,
-                      semesterFee: 0
+                      semesterFee: 0,
+                      payoutPercentage: 0
                     } : c;
+
+                    const { ourCut, percentage } = calculateOurCut(
+                      course.totalFee,
+                      university.payout,
+                      course.payoutPercentage
+                    );
                     
                     return (
                       <tr key={index} className="hover:bg-gray-50/50 transition-colors">
@@ -331,6 +466,16 @@ export default function ViewUniversityPage() {
                         <td className="px-5 py-4 text-right font-extrabold text-[#112a46] text-base bg-gray-50/40">
                           ₹{course.totalFee ? course.totalFee.toLocaleString('en-IN') : '0'}
                         </td>
+                        <td className="px-5 py-4 text-right bg-emerald-50/40 border-x border-emerald-100/60">
+                          <div className="font-black text-emerald-700 text-base">
+                            ₹{ourCut.toLocaleString('en-IN')}
+                          </div>
+                          {percentage > 0 && (
+                            <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-tight mt-0.5">
+                              {percentage}% Cut
+                            </div>
+                          )}
+                        </td>
                         <td className="px-5 py-4 text-right font-bold text-emerald-700 bg-emerald-50/20">
                           ₹{course.yearFee ? course.yearFee.toLocaleString('en-IN') : '0'}
                         </td>
@@ -342,7 +487,7 @@ export default function ViewUniversityPage() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={5} className="px-5 py-8 text-center text-gray-400 font-medium italic">
+                    <td colSpan={6} className="px-5 py-8 text-center text-gray-400 font-medium italic">
                       No courses listed for this university.
                     </td>
                   </tr>

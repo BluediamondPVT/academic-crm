@@ -32,10 +32,16 @@ export async function POST(req: Request) {
       courses,
     } = body;
 
+    const rawAgg = body.aggregator || body.aggregation;
+
     // Validate required fields
+    const aggregatorName = typeof rawAgg === 'object' && rawAgg !== null 
+      ? rawAgg.name?.trim() 
+      : (typeof rawAgg === 'string' ? rawAgg.trim() : '');
+
     if (
       !name ||
-      !aggregation ||
+      !aggregatorName ||
       !location ||
       !contactPersonMobile ||
       !modeOfLearning ||
@@ -46,14 +52,29 @@ export async function POST(req: Request) {
       courses.length === 0
     ) {
       return NextResponse.json(
-        { error: 'All fields are required, including at least one course.' },
+        { error: 'All fields are required, including aggregator name and at least one course.' },
         { status: 400 }
       );
     }
 
+    const formattedAggregator = typeof rawAgg === 'object' && rawAgg !== null ? {
+      name: rawAgg.name?.trim() || '',
+      email: rawAgg.email?.trim() || '',
+      number: rawAgg.number?.trim() || '',
+      location: rawAgg.location?.trim() || '',
+      whatsapp: rawAgg.whatsapp?.trim() || '',
+    } : {
+      name: rawAgg?.trim() || '',
+      email: '',
+      number: '',
+      location: '',
+      whatsapp: '',
+    };
+
     const newUniversity = await University.create({
       name,
-      aggregation,
+      aggregator: formattedAggregator,
+      aggregation: formattedAggregator,
       location,
       contactPersonMobile,
       modeOfLearning,

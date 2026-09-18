@@ -51,11 +51,27 @@ export async function PUT(
       courses,
     } = body;
 
+    const rawAgg = body.aggregator || body.aggregation;
+    const formattedAggregator = typeof rawAgg === 'object' && rawAgg !== null ? {
+      name: rawAgg.name?.trim() || '',
+      email: rawAgg.email?.trim() || '',
+      number: rawAgg.number?.trim() || '',
+      location: rawAgg.location?.trim() || '',
+      whatsapp: rawAgg.whatsapp?.trim() || '',
+    } : {
+      name: typeof rawAgg === 'string' ? rawAgg.trim() : '',
+      email: '',
+      number: '',
+      location: '',
+      whatsapp: '',
+    };
+
     const updatedUniversity = await University.findByIdAndUpdate(
       id,
       {
         name,
-        aggregation,
+        aggregator: formattedAggregator,
+        aggregation: formattedAggregator,
         location,
         contactPersonMobile,
         modeOfLearning,

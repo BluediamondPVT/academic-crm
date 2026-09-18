@@ -10,9 +10,21 @@ export interface ICourse {
   payoutPercentage?: number;
 }
 
+export interface IAggregator {
+  name: string;
+  email?: string;
+  number?: string;
+  location?: string;
+  whatsapp?: string;
+}
+
+// Alias for backward compatibility
+export type IAggregation = IAggregator;
+
 export interface IUniversity extends Document {
   name: string;
-  aggregation: string;
+  aggregator?: IAggregator | string;
+  aggregation?: IAggregator | string;
   location: string;
   contactPersonMobile: string;
   modeOfLearning: 'Online' | 'Distance' | 'Regular';
@@ -36,7 +48,8 @@ const CourseSchema: Schema = new Schema({
 const UniversitySchema: Schema = new Schema(
   {
     name: { type: String, required: true },
-    aggregation: { type: String, required: true },
+    aggregator: { type: Schema.Types.Mixed },
+    aggregation: { type: Schema.Types.Mixed },
     location: { type: String, required: true },
     contactPersonMobile: { type: String, required: true },
     modeOfLearning: {

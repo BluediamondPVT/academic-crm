@@ -6,8 +6,9 @@ import Link from 'next/link';
 import { 
   Building, MapPin, Phone, Globe, DollarSign, GraduationCap, Award, 
   Loader2, X, Plus, CheckCircle, AlertCircle, ArrowLeft, Save,
-  ExternalLink, Sparkles
+  ExternalLink, Sparkles, Mail, MessageCircle
 } from 'lucide-react';
+import { calculateOurCut, parsePayoutPercentage } from '@/utils/payout';
 
 interface Course {
   name: string;
@@ -16,11 +17,22 @@ interface Course {
   totalFee: number;
   yearFee: number;
   semesterFee: number;
+  payoutPercentage?: number;
 }
+
+export interface AggregatorFormData {
+  name: string;
+  email?: string;
+  number?: string;
+  location?: string;
+  whatsapp?: string;
+}
+
+export type AggregationFormData = AggregatorFormData;
 
 interface UniversityFormData {
   name: string;
-  aggregation: string;
+  aggregator: AggregatorFormData;
   location: string;
   contactPersonMobile: string;
   modeOfLearning: 'Online' | 'Distance' | 'Regular';
@@ -35,7 +47,13 @@ export default function EditUniversityPage() {
 
   const [formData, setFormData] = useState<UniversityFormData>({
     name: '',
-    aggregation: '',
+    aggregator: {
+      name: '',
+      email: '',
+      number: '',
+      location: '',
+      whatsapp: '',
+    },
     location: '',
     contactPersonMobile: '',
     modeOfLearning: 'Regular',
@@ -73,9 +91,24 @@ export default function EditUniversityPage() {
         throw new Error('Failed to load university details');
       }
       const data = await res.json();
+      const rawAgg = data.aggregator || data.aggregation;
+      const formattedAgg: AggregatorFormData = typeof rawAgg === 'object' && rawAgg !== null ? {
+        name: rawAgg.name || '',
+        email: rawAgg.email || '',
+        number: rawAgg.number || '',
+        location: rawAgg.location || '',
+        whatsapp: rawAgg.whatsapp || '',
+      } : {
+        name: typeof rawAgg === 'string' ? rawAgg : '',
+        email: '',
+        number: '',
+        location: '',
+        whatsapp: '',
+      };
+
       setFormData({
         name: data.name || '',
-        aggregation: data.aggregation || '',
+        aggregator: formattedAgg,
         location: data.location || '',
         contactPersonMobile: data.contactPersonMobile || '',
         modeOfLearning: data.modeOfLearning || 'Regular',
@@ -108,6 +141,18 @@ export default function EditUniversityPage() {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setSuccess('');
+  };
+
+  const handleAggregatorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      aggregator: {
+        ...prev.aggregator,
+        [name]: value,
+      },
+    }));
     setSuccess('');
   };
 
@@ -182,6 +227,11 @@ export default function EditUniversityPage() {
     setError('');
     setSuccess('');
 
+    if (!formData.aggregator.name.trim()) {
+      setError('Please provide the Aggregator Name.');
+      return;
+    }
+
     if (courses.length === 0) {
       setError('Please ensure at least one course is added.');
       return;
@@ -194,6 +244,8 @@ export default function EditUniversityPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          aggregator: formData.aggregator,
+          aggregation: formData.aggregator,
           courses,
         }),
       });
@@ -346,24 +398,119 @@ export default function EditUniversityPage() {
                 </div>
               </div>
 
-              {/* Aggregation */}
-              <div className="space-y-2">
-                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider">
-                  Aggregation / Affiliation <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <Award className="h-4 w-4 text-gray-400" />
+              {/* Aggregator Details Card */}
+              <div className="md:col-span-2 p-5 bg-gradient-to-br from-blue-50/60 to-indigo-50/40 rounded-2xl border border-blue-150/70 space-y-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                    <Award className="h-4 w-4" />
                   </div>
-                  <input
-                    type="text"
-                    name="aggregation"
-                    required
-                    value={formData.aggregation}
-                    onChange={handleInputChange}
-                    placeholder="e.g. UGC, AICTE, NAAC A+"
-                    className="block w-full pl-10 pr-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-[#112a46]/20 focus:border-[#112a46] text-sm font-medium text-gray-800 transition-all outline-none"
-                  />
+                  <div>
+                    <h4 className="text-xs font-bold text-[#112a46] uppercase tracking-wider">Aggregator Details</h4>
+                    <p className="text-[11px] text-gray-500 font-medium">Affiliation partner and communication contact info</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                  {/* Aggregator Name */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Aggregator Name <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <Award className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        name="name"
+                        required
+                        value={formData.aggregator.name}
+                        onChange={handleAggregatorChange}
+                        placeholder="e.g. EduCorp Partner, UGC"
+                        className="block w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#112a46]/20 focus:border-[#112a46] text-sm font-medium text-gray-800 transition-all outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Aggregator Email */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Aggregator Email
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <Mail className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.aggregator.email}
+                        onChange={handleAggregatorChange}
+                        placeholder="e.g. partner@example.com"
+                        className="block w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#112a46]/20 focus:border-[#112a46] text-sm font-medium text-gray-800 transition-all outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Aggregator Contact Number */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Aggregator Contact Number
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <Phone className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        name="number"
+                        value={formData.aggregator.number}
+                        onChange={handleAggregatorChange}
+                        placeholder="e.g. +91 9876543210"
+                        className="block w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#112a46]/20 focus:border-[#112a46] text-sm font-medium text-gray-800 transition-all outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Aggregator Location */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Aggregator Location
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <MapPin className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        name="location"
+                        value={formData.aggregator.location}
+                        onChange={handleAggregatorChange}
+                        placeholder="e.g. New Delhi, India"
+                        className="block w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#112a46]/20 focus:border-[#112a46] text-sm font-medium text-gray-800 transition-all outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Aggregator WhatsApp */}
+                  <div className="md:col-span-2 space-y-2">
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Aggregator WhatsApp Number
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <MessageCircle className="h-4 w-4 text-green-600" />
+                      </div>
+                      <input
+                        type="text"
+                        name="whatsapp"
+                        value={formData.aggregator.whatsapp}
+                        onChange={handleAggregatorChange}
+                        placeholder="e.g. +91 9876543210 (with country code)"
+                        className="block w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#112a46]/20 focus:border-[#112a46] text-sm font-medium text-gray-800 transition-all outline-none"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -634,6 +781,9 @@ export default function EditUniversityPage() {
                       <th className="px-4 py-3 font-bold text-[#112a46] border-b border-gray-200">Specialization</th>
                       <th className="px-4 py-3 font-bold text-[#112a46] border-b border-gray-200 text-center">Duration</th>
                       <th className="px-4 py-3 font-bold text-[#112a46] border-b border-gray-200 text-right">Total Fee</th>
+                      <th className="px-4 py-3 font-bold text-emerald-700 bg-emerald-50/70 border-b border-gray-200 text-right">
+                        Our Cut {parsePayoutPercentage(formData.payout) > 0 ? `(${parsePayoutPercentage(formData.payout)}%)` : ''}
+                      </th>
                       <th className="px-4 py-3 font-bold text-[#112a46] border-b border-gray-200 text-right">Year Fee</th>
                       <th className="px-4 py-3 font-bold text-[#112a46] border-b border-gray-200 text-right">Sem Fee</th>
                       <th className="px-4 py-3 font-bold text-[#112a46] border-b border-gray-200 text-center">Action</th>
@@ -642,31 +792,49 @@ export default function EditUniversityPage() {
                   <tbody className="divide-y divide-gray-100">
                     {courses.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="px-4 py-8 text-center text-gray-400 font-medium italic">
+                        <td colSpan={8} className="px-4 py-8 text-center text-gray-400 font-medium italic">
                           No courses added to this university yet.
                         </td>
                       </tr>
                     ) : (
-                      courses.map((course, index) => (
-                        <tr key={index} className="hover:bg-gray-50/50 transition-colors">
-                          <td className="px-4 py-3 font-bold text-gray-800">{course.name}</td>
-                          <td className="px-4 py-3 text-gray-500">{course.specialization || 'N/A'}</td>
-                          <td className="px-4 py-3 text-center text-gray-600 font-semibold">{course.duration} Yrs</td>
-                          <td className="px-4 py-3 text-right text-gray-800 font-bold">₹{course.totalFee.toLocaleString('en-IN')}</td>
-                          <td className="px-4 py-3 text-right text-gray-600 font-semibold">₹{course.yearFee.toLocaleString('en-IN')}</td>
-                          <td className="px-4 py-3 text-right text-gray-600 font-semibold">₹{course.semesterFee.toLocaleString('en-IN')}</td>
-                          <td className="px-4 py-3 text-center">
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveCourse(index)}
-                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                              title="Remove Course"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))
+                      courses.map((course, index) => {
+                        const { ourCut, percentage } = calculateOurCut(
+                          course.totalFee,
+                          formData.payout,
+                          course.payoutPercentage
+                        );
+
+                        return (
+                          <tr key={index} className="hover:bg-gray-50/50 transition-colors">
+                            <td className="px-4 py-3 font-bold text-gray-800">{course.name}</td>
+                            <td className="px-4 py-3 text-gray-500">{course.specialization || 'N/A'}</td>
+                            <td className="px-4 py-3 text-center text-gray-600 font-semibold">{course.duration} Yrs</td>
+                            <td className="px-4 py-3 text-right text-gray-800 font-bold">₹{course.totalFee.toLocaleString('en-IN')}</td>
+                            <td className="px-4 py-3 text-right bg-emerald-50/40 border-x border-emerald-100/50">
+                              <div className="font-extrabold text-emerald-700 text-sm">
+                                ₹{ourCut.toLocaleString('en-IN')}
+                              </div>
+                              {percentage > 0 && (
+                                <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-tight">
+                                  {percentage}% Cut
+                                </div>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-right text-gray-600 font-semibold">₹{course.yearFee.toLocaleString('en-IN')}</td>
+                            <td className="px-4 py-3 text-right text-gray-600 font-semibold">₹{course.semesterFee.toLocaleString('en-IN')}</td>
+                            <td className="px-4 py-3 text-center">
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveCourse(index)}
+                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Remove Course"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
