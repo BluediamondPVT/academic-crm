@@ -14,7 +14,8 @@ import {
   DollarSign,
   ArrowRight,
   TrendingUp,
-  ChevronDown
+  ChevronDown,
+  Calendar
 } from 'lucide-react';
 import Link from 'next/link';
 import { StudentRecord } from '../counselor/leads/types';
@@ -266,7 +267,7 @@ export default function ConfirmedAdmissionsPage() {
                 <th className="px-2 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Name</th>
                 <th className="px-2 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Contact</th>
                 <th className="px-2 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Course &amp; Univ</th>
-                <th className="px-2 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">City</th>
+                <th className="px-2 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Due Date</th>
                 <th className="px-2 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Total Fee</th>
                 <th className="px-2 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Paid</th>
                 <th className="px-2 py-3 text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">Rest</th>
@@ -340,10 +341,71 @@ export default function ConfirmedAdmissionsPage() {
                         </div>
                       </td>
                       <td className="px-2 py-3">
-                        <div className="inline-flex items-center gap-1 text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg">
-                          <Building className="h-3 w-3 text-indigo-600" />
-                          {student.city}
-                        </div>
+                        {(() => {
+                          if (isPaidInFull) {
+                            return (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200/60 whitespace-nowrap">
+                                <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
+                                Paid Full
+                              </span>
+                            );
+                          }
+
+                          if (!nextDue) {
+                            return <span className="text-gray-400 text-[10px] font-medium italic">No Due</span>;
+                          }
+
+                          const d = new Date(nextDue);
+                          if (isNaN(d.getTime())) {
+                            return <span className="text-gray-400 text-[10px] font-medium">-</span>;
+                          }
+
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          const targetDate = new Date(d);
+                          targetDate.setHours(0, 0, 0, 0);
+                          const diffTime = targetDate.getTime() - today.getTime();
+                          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                          const formattedDate = d.toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          });
+
+                          if (diffDays <= 0) {
+                            return (
+                              <div className="inline-flex flex-col">
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200 whitespace-nowrap">
+                                  <Calendar className="h-3 w-3 text-rose-600 shrink-0" />
+                                  {formattedDate}
+                                </span>
+                                <span className="text-[8px] font-black text-rose-600 uppercase tracking-tight mt-0.5">
+                                  {diffDays === 0 ? 'Due Today' : `Overdue (${Math.abs(diffDays)}d)`}
+                                </span>
+                              </div>
+                            );
+                          } else if (diffDays <= 30) {
+                            return (
+                              <div className="inline-flex flex-col">
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 whitespace-nowrap">
+                                  <Calendar className="h-3 w-3 text-amber-600 shrink-0" />
+                                  {formattedDate}
+                                </span>
+                                <span className="text-[8px] font-bold text-amber-600 mt-0.5">
+                                  Due in {diffDays}d
+                                </span>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-700 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200 whitespace-nowrap">
+                              <Calendar className="h-3 w-3 text-slate-400 shrink-0" />
+                              {formattedDate}
+                            </span>
+                          );
+                        })()}
                       </td>
 
                       <td className="px-2 py-3">
