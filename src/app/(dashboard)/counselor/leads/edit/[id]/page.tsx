@@ -374,12 +374,19 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
       // STRICT CONDITION: Only process and send payments if status is 'Admission'
       if (formData.status === 'Admission') {
         const paidVal = Number(amountPaid) || 0;
+        const hasExistingPayments = Boolean(student?.payments && student.payments.length > 0);
         payload.totalPaid = (student?.totalPaid || 0) + paidVal;
         payload.session = formData.session;
         payload.payoutPercentage = Number(payoutPercentage) || 0;
-        payload.otherAmount = Number(otherAmount) || 0;
-        payload.paidToUniversity = Number(paidToUniversity) || 0;
-        payload.profit = Number(profit) || 0;
+        payload.otherAmount = hasExistingPayments && (paidVal > 0 || (Number(otherAmount) || 0) > 0)
+          ? (student?.otherAmount || 0) + (Number(otherAmount) || 0)
+          : (Number(otherAmount) || 0);
+        payload.paidToUniversity = hasExistingPayments && (paidVal > 0 || (Number(otherAmount) || 0) > 0)
+          ? (student?.paidToUniversity || 0) + (Number(paidToUniversity) || 0)
+          : (Number(paidToUniversity) || 0);
+        payload.profit = hasExistingPayments && (paidVal > 0 || (Number(otherAmount) || 0) > 0)
+          ? (student?.profit || 0) + (Number(profit) || 0)
+          : (Number(profit) || 0);
         if (nextDueDate) {
           payload.nextDueDate = new Date(nextDueDate).toISOString();
         }

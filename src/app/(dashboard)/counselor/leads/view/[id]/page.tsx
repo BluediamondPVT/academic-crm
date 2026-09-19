@@ -24,7 +24,7 @@ export default function ViewLeadPage({ params }: ViewLeadPageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
+  useEffect(() => {   
     params.then(res => {
       setStudentId(res.id);
     });

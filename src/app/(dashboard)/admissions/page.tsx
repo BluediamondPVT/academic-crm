@@ -304,13 +304,25 @@ export default function ConfirmedAdmissionsPage() {
                 </tr>
               ) : (
                 filteredStudents.map((student, index) => {
-                  const otherAmt = student.otherAmount !== undefined && student.otherAmount > 0
-                    ? student.otherAmount
-                    : (student.payments?.reduce((acc: number, p: any) => acc + (Number(p.otherAmount) || 0), 0) || 0);
+                  const otherAmt = (student.payments && student.payments.length > 0)
+                    ? student.payments.reduce((acc: number, p: any) => acc + (Number(p.otherAmount) || 0), 0)
+                    : (student.otherAmount || 0);
                   const totalPaidDisplay = (Number(student.totalPaid) || 0) + otherAmt;
-                  const profit = student.profit !== undefined && student.profit > 0 ? student.profit : Math.round(((student.totalPaid || 0) * (student.payoutPercentage || 0)) / 100);
-                  const univAmt = student.paidToUniversity !== undefined && student.paidToUniversity > 0 ? student.paidToUniversity : Math.max(0, totalPaidDisplay - profit);
-                  const restFee = student.remainingFee !== undefined ? student.remainingFee : Math.max(0, (student.totalFee || 0) - (student.totalPaid || 0));
+                  const paymentsProfit = (student.payments && student.payments.length > 0)
+                    ? student.payments.reduce((acc: number, p: any) => acc + ((p.profit !== undefined && p.profit > 0) ? Number(p.profit) : Math.round(((Number(p.amount) || 0) * (Number(student.payoutPercentage) || 0)) / 100)), 0)
+                    : 0;
+                  const profit = paymentsProfit > 0
+                    ? paymentsProfit
+                    : (student.profit !== undefined && student.profit > 0 ? student.profit : Math.round(((student.totalPaid || 0) * (student.payoutPercentage || 0)) / 100));
+                  const paymentsUniv = (student.payments && student.payments.length > 0)
+                    ? student.payments.reduce((acc: number, p: any) => acc + (Number(p.paidToUniversity) || 0), 0)
+                    : 0;
+                  const univAmt = paymentsUniv > 0
+                    ? paymentsUniv
+                    : (student.paidToUniversity !== undefined && student.paidToUniversity > 0 ? student.paidToUniversity : Math.max(0, totalPaidDisplay - profit));
+                  const restFee = (student.payments && student.payments.length > 0 && (student.totalFee || 0) > 0)
+                    ? Math.max(0, (student.totalFee || 0) - totalPaidDisplay)
+                    : (student.remainingFee !== undefined ? student.remainingFee : Math.max(0, (student.totalFee || 0) - (student.totalPaid || 0)));
                   const isPaidInFull = restFee === 0 && (student.totalFee || 0) > 0;
 
                   const nextDue = student.nextDueDate || (student.payments && student.payments.length > 0 ? student.payments[student.payments.length - 1]?.nextDueDate : undefined);

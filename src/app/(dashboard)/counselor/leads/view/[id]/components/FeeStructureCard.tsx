@@ -6,6 +6,41 @@ interface FeeStructureCardProps {
 }
 
 export const FeeStructureCard: React.FC<FeeStructureCardProps> = ({ student }) => {
+  const totalOtherAmount = React.useMemo(() => {
+    if (student.payments && student.payments.length > 0) {
+      const sumOther = student.payments.reduce((acc, p) => acc + (Number(p.otherAmount) || 0), 0);
+      if (sumOther > 0) return sumOther;
+    }
+    return student.otherAmount || 0;
+  }, [student]);
+
+  const totalPaidAmount = (student.totalPaid || 0) + totalOtherAmount;
+
+  const remainingFeeDisplay = React.useMemo(() => {
+    if (student.payments && student.payments.length > 0 && (student.totalFee || 0) > 0) {
+      return Math.max(0, (student.totalFee || 0) - totalPaidAmount);
+    }
+    return student.remainingFee !== undefined ? student.remainingFee : undefined;
+  }, [student, totalPaidAmount]);
+
+  const totalProfit = React.useMemo(() => {
+    if (student.payments && student.payments.length > 0) {
+      const sumProfit = student.payments.reduce((acc, p) => {
+        const pProfit = (p.profit !== undefined && p.profit > 0)
+          ? Number(p.profit)
+          : Math.round(((Number(p.amount) || 0) * (Number(student.payoutPercentage) || 0)) / 100);
+        return acc + pProfit;
+      }, 0);
+      if (sumProfit > 0) return sumProfit;
+    }
+    if (student.profit !== undefined && student.profit > 0) {
+      return student.profit;
+    }
+    return Math.round(((student.totalPaid || 0) * (student.payoutPercentage || 0)) / 100);
+  }, [student]);
+
+  const hasPayoutOrProfit = (student.payoutPercentage !== undefined && student.payoutPercentage > 0) || totalProfit > 0;
+
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-xs p-6">
       <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4 flex items-center gap-2">
@@ -48,14 +83,14 @@ export const FeeStructureCard: React.FC<FeeStructureCardProps> = ({ student }) =
           <div className="bg-emerald-50/50 border border-emerald-100/60 rounded-xl p-3 hover:bg-emerald-50 transition-colors">
             <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-600 block">Total Paid</span>
             <span className="text-sm font-black text-emerald-950 mt-0.5 block">
-              {(student.totalPaid || student.otherAmount) ? `₹${((student.totalPaid || 0) + (student.otherAmount || 0)).toLocaleString('en-IN')}` : '₹0'}
+              {totalPaidAmount > 0 ? `₹${totalPaidAmount.toLocaleString('en-IN')}` : '₹0'}
             </span>
           </div>
 
           <div className="bg-rose-50/50 border border-rose-100/60 rounded-xl p-3 hover:bg-rose-50 transition-colors">
             <span className="text-[10px] uppercase font-bold tracking-wider text-rose-600 block">Remaining Fee</span>
             <span className="text-sm font-black text-rose-950 mt-0.5 block">
-              {student.remainingFee !== undefined ? `₹${student.remainingFee.toLocaleString('en-IN')}` : 'N/A'}
+              {remainingFeeDisplay !== undefined ? `₹${remainingFeeDisplay.toLocaleString('en-IN')}` : 'N/A'}
             </span>
           </div>
         </div>
@@ -86,7 +121,7 @@ export const FeeStructureCard: React.FC<FeeStructureCardProps> = ({ student }) =
         )}
 
         {/* Payout & Profit */}
-        {((student.payoutPercentage !== undefined && student.payoutPercentage > 0) || (student.profit !== undefined && student.profit > 0)) && (
+        {hasPayoutOrProfit && (
           <div className="grid grid-cols-2 gap-3 border-t border-slate-100/60 pt-3">
             <div className="bg-indigo-50/50 border border-indigo-100/60 rounded-xl p-3 hover:bg-indigo-50 transition-colors">
               <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-600 block">Payout Ratio</span>
@@ -98,10 +133,7 @@ export const FeeStructureCard: React.FC<FeeStructureCardProps> = ({ student }) =
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 text-white hover:bg-slate-800 transition-colors">
               <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-300 block">Our Profit</span>
               <span className="text-sm font-black text-indigo-200 mt-0.5 block">
-                ₹{(student.profit !== undefined && student.profit > 0
-                  ? student.profit
-                  : Math.round(((student.totalPaid || 0) * (student.payoutPercentage || 0)) / 100)
-                ).toLocaleString('en-IN')}
+                ₹{totalProfit.toLocaleString('en-IN')}
               </span>
             </div>
           </div>

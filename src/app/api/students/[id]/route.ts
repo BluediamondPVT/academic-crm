@@ -208,15 +208,29 @@ export async function PUT(
       delete body.paymentTransaction;
     }
 
-    if (body.otherAmount !== undefined) body.otherAmount = Number(body.otherAmount) || 0;
-    if (body.paidToUniversity !== undefined) body.paidToUniversity = Number(body.paidToUniversity) || 0;
-    if (body.profit !== undefined) body.profit = Number(body.profit) || 0;
+    if (body.payments && body.payments.length > 0) {
+      body.profit = body.payments.reduce((sum: number, p: any) => {
+        const pProf = p.profit !== undefined && p.profit > 0
+          ? Number(p.profit)
+          : Math.round(((Number(p.amount) || 0) * (Number(body.payoutPercentage || existingStudent.payoutPercentage) || 0)) / 100);
+        return sum + pProf;
+      }, 0);
+      body.paidToUniversity = body.payments.reduce((sum: number, p: any) => sum + (Number(p.paidToUniversity) || 0), 0);
+      body.otherAmount = body.payments.reduce((sum: number, p: any) => sum + (Number(p.otherAmount) || 0), 0);
+      body.totalPaid = body.payments.reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
+    } else {
+      if (body.otherAmount !== undefined) body.otherAmount = Number(body.otherAmount) || 0;
+      if (body.paidToUniversity !== undefined) body.paidToUniversity = Number(body.paidToUniversity) || 0;
+      if (body.profit !== undefined) body.profit = Number(body.profit) || 0;
+    }
+
     if (body.nextDueDate) body.nextDueDate = new Date(body.nextDueDate);
 
     // Calculate remaining fee if totalFee or totalPaid are updated/present
     const newTotalFee = body.totalFee !== undefined ? Number(body.totalFee) : existingStudent.totalFee || 0;
     const newTotalPaid = body.totalPaid !== undefined ? Number(body.totalPaid) : existingStudent.totalPaid || 0;
-    body.remainingFee = newTotalFee - newTotalPaid;
+    const newOtherAmount = body.otherAmount !== undefined ? Number(body.otherAmount) : existingStudent.otherAmount || 0;
+    body.remainingFee = Math.max(0, newTotalFee - (newTotalPaid + newOtherAmount));
 
     const updatedStudent = await Student.findByIdAndUpdate(
       id,

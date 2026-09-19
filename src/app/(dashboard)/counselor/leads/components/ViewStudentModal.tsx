@@ -252,30 +252,48 @@ export default function ViewStudentModal({ student, onClose }: ViewStudentModalP
                 </span>
               </div>
 
-              <div className="bg-emerald-50/60 border border-emerald-100 rounded-xl p-3.5">
-                <span className="text-xs text-emerald-600 font-bold block">Total Paid</span>
-                <span className="text-base font-extrabold text-emerald-950 mt-1 block">
-                  {(student.totalPaid || student.otherAmount) ? `₹${((student.totalPaid || 0) + (student.otherAmount || 0)).toLocaleString('en-IN')}` : '₹0'}
-                </span>
-              </div>
+              {(() => {
+                const totalOtherAmount = (student.payments && student.payments.length > 0)
+                  ? student.payments.reduce((acc, p) => acc + (Number(p.otherAmount) || 0), 0)
+                  : (student.otherAmount || 0);
+                const totalPaidAmount = (student.totalPaid || 0) + totalOtherAmount;
+                const remainingFeeDisplay = (student.payments && student.payments.length > 0 && (student.totalFee || 0) > 0)
+                  ? Math.max(0, (student.totalFee || 0) - totalPaidAmount)
+                  : student.remainingFee;
+                const paymentsProfit = (student.payments && student.payments.length > 0)
+                  ? student.payments.reduce((acc, p) => acc + ((p.profit !== undefined && p.profit > 0) ? Number(p.profit) : Math.round(((Number(p.amount) || 0) * (Number(student.payoutPercentage) || 0)) / 100)), 0)
+                  : 0;
+                const displayProfit = paymentsProfit > 0
+                  ? paymentsProfit
+                  : (student.profit !== undefined && student.profit > 0
+                      ? student.profit
+                      : Math.round(((student.totalPaid || 0) * (student.payoutPercentage || 0)) / 100));
 
-              <div className="bg-rose-50/60 border border-rose-100 rounded-xl p-3.5">
-                <span className="text-xs text-rose-600 font-bold block">Remaining Fee</span>
-                <span className="text-base font-extrabold text-rose-950 mt-1 block">
-                  {student.remainingFee !== undefined ? `₹${student.remainingFee.toLocaleString('en-IN')}` : 'N/A'}
-                </span>
-              </div>
+                return (
+                  <>
+                    <div className="bg-emerald-50/60 border border-emerald-100 rounded-xl p-3.5">
+                      <span className="text-xs text-emerald-600 font-bold block">Total Paid</span>
+                      <span className="text-base font-extrabold text-emerald-950 mt-1 block">
+                        {totalPaidAmount > 0 ? `₹${totalPaidAmount.toLocaleString('en-IN')}` : '₹0'}
+                      </span>
+                    </div>
 
-              <div className="bg-slate-900 border border-slate-800 text-white rounded-xl p-3.5">
-                <span className="text-xs text-indigo-300 font-medium block">Our Profit</span>
-                <span className="text-base font-extrabold text-indigo-200 mt-1 block">
-                  {student.profit !== undefined && student.profit > 0
-                    ? `₹${student.profit.toLocaleString('en-IN')}`
-                    : student.totalPaid && student.payoutPercentage
-                      ? `₹${Math.round((student.totalPaid * student.payoutPercentage) / 100).toLocaleString('en-IN')}`
-                      : '₹0'}
-                </span>
-              </div>
+                    <div className="bg-rose-50/60 border border-rose-100 rounded-xl p-3.5">
+                      <span className="text-xs text-rose-600 font-bold block">Remaining Fee</span>
+                      <span className="text-base font-extrabold text-rose-950 mt-1 block">
+                        {remainingFeeDisplay !== undefined ? `₹${remainingFeeDisplay.toLocaleString('en-IN')}` : 'N/A'}
+                      </span>
+                    </div>
+
+                    <div className="bg-slate-900 border border-slate-800 text-white rounded-xl p-3.5">
+                      <span className="text-xs text-indigo-300 font-medium block">Our Profit</span>
+                      <span className="text-base font-extrabold text-indigo-200 mt-1 block">
+                        {displayProfit > 0 ? `₹${displayProfit.toLocaleString('en-IN')}` : '₹0'}
+                      </span>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
