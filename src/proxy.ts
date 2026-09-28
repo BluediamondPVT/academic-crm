@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { ROLES } from '@/config/roles';
 
-export function proxy(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Extract authentication cookies
@@ -28,7 +28,9 @@ export function proxy(request: NextRequest) {
   if (token) {
     // 🔒 COUNSELOR ROLE SECURITY:
     if (userRole === ROLES.COUNSELOR) {
-      if (!pathname.startsWith('/counselor') && !pathname.startsWith('/workspace')) {
+      if (pathname.startsWith('/admin/universities')) {
+        // Allow counselors to view universities catalog
+      } else if (!pathname.startsWith('/counselor') && !pathname.startsWith('/workspace')) {
         return NextResponse.redirect(new URL('/counselor', request.url));
       }
     } 
