@@ -1,6 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import University from '@/models/University';
+import { verifyApiAuth } from '@/utils/authGuard';
+import { ROLES } from '@/config/roles';
 
 export async function GET(
   req: Request,
@@ -94,11 +96,15 @@ export async function PUT(
 }
 
 export async function DELETE(
-  req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) { 
   try {
     await connectToDatabase();
+    const auth = await verifyApiAuth(req);
+    if (auth.error || !auth.user || auth.user.role !== ROLES.ADMIN) {
+      return NextResponse.json({ error: "Unauthorized. Admin access required." }, { status: 403 });
+    }
     
     const { id } = await params;
 

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Loader2, User, Phone, Building, Eye, Mail, Edit, Trash2, ShieldCheck, UserCheck } from 'lucide-react';
+import { Loader2, User, Phone, Building, Eye, Mail, Edit, Trash2, ShieldCheck, UserCheck, GraduationCap } from 'lucide-react';
 import { StudentRecord } from '../types';
 
 interface StudentsTableProps {
@@ -125,7 +125,15 @@ export default function StudentsTable({
                   </td>
                   {isAdmin && (
                     <td className="px-4 py-4">
-                      {(!student.counselorName || student.counselorName.toLowerCase() === 'admin') ? (
+                      {((student as any).counselorRole === 'ACADEMIC' || student.counselorName?.toLowerCase() === 'fardeen') ? (
+                        <div className="flex flex-col gap-1">
+                          <span className="inline-flex items-center gap-1 w-max px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
+                            <GraduationCap className="h-3 w-3 text-emerald-600" />
+                            Academic
+                          </span>
+                          <span className="text-xs font-bold text-gray-700">Fardeen</span>
+                        </div>
+                      ) : (!student.counselorName || student.counselorName.toLowerCase() === 'admin') ? (
                         <div className="flex flex-col gap-1">
                           <span className="inline-flex items-center gap-1 w-max px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 uppercase tracking-wider">
                             <ShieldCheck className="h-3 w-3 text-purple-600" />

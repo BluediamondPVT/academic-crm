@@ -45,6 +45,7 @@ export interface IStudent extends Document {
   status: string;
   counselorId?: string;
   counselorName?: string;
+  counselorRole?: string;
   city?: string;
   session?: string;
   nextDueDate?: Date;
@@ -104,6 +105,7 @@ const StudentSchema: Schema = new Schema(
     },
     counselorId: { type: String, index: true },
     counselorName: { type: String },
+    counselorRole: { type: String },
     city: { type: String },
     session: { type: String },
     nextDueDate: { type: Date },

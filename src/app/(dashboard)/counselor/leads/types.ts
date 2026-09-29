@@ -80,6 +80,7 @@ export interface StudentRecord {
   status: string;
   counselorId?: string;
   counselorName?: string;
+  counselorRole?: string;
   createdAt: string;
   updatedAt?: string;
 }

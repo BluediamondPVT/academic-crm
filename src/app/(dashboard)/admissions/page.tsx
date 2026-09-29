@@ -69,6 +69,10 @@ export default function ConfirmedAdmissionsPage() {
     new Set(students.map((s) => s.counselorName).filter(Boolean) as string[])
   ).sort();
 
+  const availableSessions = Array.from(
+    new Set(students.map((s) => s.session).filter(Boolean) as string[])
+  ).sort();
+
   // Filter students based on search term, university, and counselor
   const filteredStudents = students.filter((student) => {
     const matchesSearch =
@@ -87,7 +91,11 @@ export default function ConfirmedAdmissionsPage() {
       selectedCounselor === 'all' || student.counselorName === selectedCounselor;
 
     const matchesSession =
-      sessionFilter === '' || sessionFilter === 'All Sessions' || student.session === sessionFilter;
+      !sessionFilter ||
+      sessionFilter === 'all' ||
+      sessionFilter === 'All Sessions' ||
+      student.session === sessionFilter ||
+      (student.session && student.session.toLowerCase().includes(sessionFilter.toLowerCase()));
 
     let matchesDueDate = true;
     if (dueDateFilter && dueDateFilter !== 'All Due Status') {
@@ -222,15 +230,18 @@ export default function ConfirmedAdmissionsPage() {
           </div>
 
           {/* Session Filter Dropdown */}
-          <div className="relative w-full sm:w-40">
+          <div className="relative w-full sm:w-44">
             <select
               value={sessionFilter}
               onChange={(e) => setSessionFilter(e.target.value)}
               className="w-full pl-4 pr-8 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium transition-all bg-white appearance-none cursor-pointer text-gray-700"
             >
-              <option value="">All Sessions</option>
-              <option value="January">January</option>
-              <option value="July">July</option>
+              <option value="all">All Sessions</option>
+              {availableSessions.map((session) => (
+                <option key={session} value={session}>
+                  {session}
+                </option>
+              ))}
             </select>
             <ChevronDown className="h-4 w-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
           </div>
@@ -449,7 +460,14 @@ export default function ConfirmedAdmissionsPage() {
                             </div>
                           </td>
                           <td className="px-2 py-3">
-                            {(!student.counselorName || student.counselorName.toLowerCase() === 'admin') ? (
+                            {((student as any).counselorRole === 'ACADEMIC' || student.counselorName?.toLowerCase() === 'fardeen') ? (
+                              <div className="flex flex-col gap-0.5">
+                                <span className="inline-flex items-center gap-1 w-max px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wider">
+                                  Academic
+                                </span>
+                                <span className="text-[10px] font-bold text-gray-700">Fardeen</span>
+                              </div>
+                            ) : (!student.counselorName || student.counselorName.toLowerCase() === 'admin') ? (
                               <div className="flex flex-col gap-0.5">
                                 <span className="inline-flex items-center gap-1 w-max px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-purple-50 text-purple-700 border border-purple-200 uppercase tracking-wider">
                                   Admin
