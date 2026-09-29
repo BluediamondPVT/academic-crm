@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Loader2,
   User,
@@ -15,9 +15,15 @@ import {
   ArrowRight,
   TrendingUp,
   ChevronDown,
-  Calendar
+  Calendar,
+  Download,
+  FileSpreadsheet,
+  FileText,
+  CalendarRange,
+  X
 } from 'lucide-react';
 import Link from 'next/link';
+import * as XLSX from 'xlsx';
 import { StudentRecord } from '../counselor/leads/types';
 
 export default function ConfirmedAdmissionsPage() {
@@ -28,8 +34,12 @@ export default function ConfirmedAdmissionsPage() {
   const [selectedCounselor, setSelectedCounselor] = useState<string>('all');
   const [sessionFilter, setSessionFilter] = useState('');
   const [dueDateFilter, setDueDateFilter] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  const downloadMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const roleCookie = document.cookie
@@ -38,6 +48,18 @@ export default function ConfirmedAdmissionsPage() {
       ?.split('=')[1];
     setIsAdmin(roleCookie === 'ADMIN' || roleCookie === 'ACADEMIC');
     fetchAdmissions();
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (downloadMenuRef.current && !downloadMenuRef.current.contains(event.target as Node)) {
+        setShowDownloadMenu(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const fetchAdmissions = async () => {
@@ -73,7 +95,7 @@ export default function ConfirmedAdmissionsPage() {
     new Set(students.map((s) => s.session).filter(Boolean) as string[])
   ).sort();
 
-  // Filter students based on search term, university, and counselor
+  // Filter students based on search term, university, counselor, session, due date, and date range
   const filteredStudents = students.filter((student) => {
     const matchesSearch =
       student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -121,8 +143,142 @@ export default function ConfirmedAdmissionsPage() {
       }
     }
 
-    return matchesSearch && matchesUniversity && matchesCounselor && matchesSession && matchesDueDate;
+    let matchesDateRange = true;
+    if (startDate || endDate) {
+      const studentDateStr = student.createdAt || (student.payments && student.payments[0]?.date);
+      if (studentDateStr) {
+        const studentDate = new Date(studentDateStr);
+        if (!isNaN(studentDate.getTime())) {
+          if (startDate) {
+            const fromDate = new Date(startDate);
+            fromDate.setHours(0, 0, 0, 0);
+            if (studentDate < fromDate) {
+              matchesDateRange = false;
+            }
+          }
+          if (endDate && matchesDateRange) {
+            const toDate = new Date(endDate);
+            toDate.setHours(23, 59, 59, 999);
+            if (studentDate > toDate) {
+              matchesDateRange = false;
+            }
+          }
+        }
+      }
+    }
+
+    return matchesSearch && matchesUniversity && matchesCounselor && matchesSession && matchesDueDate && matchesDateRange;
   });
+
+  // Export Data Preparation
+  const prepareExportData = () => {
+    return filteredStudents.map((student, index) => {
+      const otherAmt = (student.payments && student.payments.length > 0)
+        ? student.payments.reduce((acc: number, p: any) => acc + (Number(p.otherAmount) || 0), 0)
+        : (student.otherAmount || 0);
+      const totalPaidDisplay = (Number(student.totalPaid) || 0) + otherAmt;
+      const paymentsProfit = (student.payments && student.payments.length > 0)
+        ? student.payments.reduce((acc: number, p: any) => acc + ((p.profit !== undefined && p.profit > 0) ? Number(p.profit) : Math.round(((Number(p.amount) || 0) * (Number(student.payoutPercentage) || 0)) / 100)), 0)
+        : 0;
+      const profit = paymentsProfit > 0
+        ? paymentsProfit
+        : (student.profit !== undefined && student.profit > 0 ? student.profit : Math.round(((student.totalPaid || 0) * (student.payoutPercentage || 0)) / 100));
+      const paymentsUniv = (student.payments && student.payments.length > 0)
+        ? student.payments.reduce((acc: number, p: any) => acc + (Number(p.paidToUniversity) || 0), 0)
+        : 0;
+      const univAmt = paymentsUniv > 0
+        ? paymentsUniv
+        : (student.paidToUniversity !== undefined && student.paidToUniversity > 0 ? student.paidToUniversity : Math.max(0, totalPaidDisplay - profit));
+      const restFee = (student.payments && student.payments.length > 0 && (student.totalFee || 0) > 0)
+        ? Math.max(0, (student.totalFee || 0) - totalPaidDisplay)
+        : (student.remainingFee !== undefined ? student.remainingFee : Math.max(0, (student.totalFee || 0) - (student.totalPaid || 0)));
+
+      const nextDue = student.nextDueDate || (student.payments && student.payments.length > 0 ? student.payments[student.payments.length - 1]?.nextDueDate : undefined);
+
+      const admissionDate = student.createdAt 
+        ? new Date(student.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
+        : (student.payments && student.payments[0]?.date ? student.payments[0].date : 'N/A');
+
+      const entryBy = ((student as any).counselorRole === 'ACADEMIC' || student.counselorName?.toLowerCase() === 'fardeen')
+        ? 'Fardeen (Academic)'
+        : (!student.counselorName || student.counselorName.toLowerCase() === 'admin')
+        ? 'Super Admin'
+        : student.counselorName;
+
+      const record: Record<string, any> = {
+        'Sr No': index + 1,
+        'Admission Date': admissionDate,
+        'Student Name': student.name,
+        'Contact No': student.phoneNumber,
+        'Email': student.email || '',
+        'City': student.city || '',
+        'Course': student.courseName,
+        'Specialization': student.specialization || '',
+        'University': student.universityName,
+        'Session': student.session || '',
+        'Total Course Fee (Rs)': student.totalFee || 0,
+        'Amount Paid (Rs)': totalPaidDisplay,
+        'Balance Due (Rs)': restFee,
+      };
+
+      if (isAdmin) {
+        record['Our Profit (Rs)'] = profit;
+        record['Univ Share (Rs)'] = univAmt;
+        record['Entry By'] = entryBy;
+      }
+
+      record['Next Due Date'] = nextDue ? formatDueDate(nextDue) : 'N/A';
+      record['Admission Remarks / LMS Notes'] = student.admissionRemark || student.remark || '';
+      record['Status'] = student.status;
+
+      return record;
+    });
+  };
+
+  const handleExportExcel = () => {
+    if (filteredStudents.length === 0) {
+      alert('No records to export matching your current filters.');
+      return;
+    }
+    const data = prepareExportData();
+    const ws = XLSX.utils.json_to_sheet(data);
+
+    // Auto-fit column widths
+    const colWidths = Object.keys(data[0] || {}).map((key) => {
+      const maxLen = Math.max(
+        key.length,
+        ...data.map((row) => (row[key] !== undefined ? String(row[key]).length : 0))
+      );
+      return { wch: Math.min(Math.max(maxLen + 3, 12), 40) };
+    });
+    ws['!cols'] = colWidths;
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Confirmed Admissions');
+    const today = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(wb, `Confirmed_Admissions_${today}.xlsx`);
+    setShowDownloadMenu(false);
+  };
+
+  const handleExportCsv = () => {
+    if (filteredStudents.length === 0) {
+      alert('No records to export matching your current filters.');
+      return;
+    }
+    const data = prepareExportData();
+    const ws = XLSX.utils.json_to_sheet(data);
+    const csvOutput = XLSX.utils.sheet_to_csv(ws);
+    const blob = new Blob([csvOutput], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    const today = new Date().toISOString().split('T')[0];
+    link.setAttribute('download', `Confirmed_Admissions_${today}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setShowDownloadMenu(false);
+  };
 
   // Calculate total fee of all admissions
   const totalRevenue = students.reduce((acc, curr) => acc + (curr.totalFee || 0), 0);
@@ -179,92 +335,190 @@ export default function ConfirmedAdmissionsPage() {
 
 
       {/* Search & Filter bar */}
-      <div className="bg-white/60 backdrop-blur-lg rounded-2xl border border-gray-100/60 p-4 flex flex-col md:flex-row gap-3 items-center justify-between shadow-xs">
-        <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full md:w-auto flex-1 items-center">
-          {/* Search Input */}
-          <div className="relative w-full sm:w-64">
-            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by name, course, university..."
-              className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium transition-all bg-white"
-            />
+      <div className="bg-white/70 backdrop-blur-lg rounded-2xl border border-gray-150/70 p-4 flex flex-col gap-3 shadow-xs">
+        <div className="flex flex-col lg:flex-row gap-3 items-center justify-between">
+          <div className="flex flex-wrap gap-2.5 w-full lg:w-auto flex-1 items-center">
+            {/* Search Input */}
+            <div className="relative w-full sm:w-60">
+              <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search name, phone, course..."
+                className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium transition-all bg-white"
+              />
+            </div>
+
+            {/* University Filter Dropdown */}
+            <div className="relative w-full sm:w-48">
+              <Building className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <select
+                value={selectedUniversity}
+                onChange={(e) => setSelectedUniversity(e.target.value)}
+                className="w-full pl-9 pr-7 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium transition-all bg-white appearance-none cursor-pointer text-gray-700"
+              >
+                <option value="all">All Universities</option>
+                {availableUniversities.map((uni) => (
+                  <option key={uni} value={uni}>
+                    {uni}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="h-4 w-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            </div>
+
+            {/* Counselor Filter Dropdown */}
+            <div className="relative w-full sm:w-40">
+              <User className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <select
+                value={selectedCounselor}
+                onChange={(e) => setSelectedCounselor(e.target.value)}
+                className="w-full pl-9 pr-7 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium transition-all bg-white appearance-none cursor-pointer text-gray-700"
+              >
+                <option value="all">All Counselors</option>
+                {availableCounselors.map((counselor) => (
+                  <option key={counselor} value={counselor}>
+                    {counselor}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="h-4 w-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            </div>
+
+            {/* Session Filter Dropdown */}
+            <div className="relative w-full sm:w-36">
+              <select
+                value={sessionFilter}
+                onChange={(e) => setSessionFilter(e.target.value)}
+                className="w-full pl-3 pr-7 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium transition-all bg-white appearance-none cursor-pointer text-gray-700"
+              >
+                <option value="all">All Sessions</option>
+                {availableSessions.map((session) => (
+                  <option key={session} value={session}>
+                    {session}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="h-4 w-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            </div>
+
+            {/* Due Date Filter Dropdown */}
+            <div className="relative w-full sm:w-44">
+              <select
+                value={dueDateFilter}
+                onChange={(e) => setDueDateFilter(e.target.value)}
+                className="w-full pl-3 pr-7 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium transition-all bg-white appearance-none cursor-pointer text-gray-700"
+              >
+                <option value="">All Due Status</option>
+                <option value="Overdue (Red)">Overdue (Red)</option>
+                <option value="Upcoming 30 Days (Yellow)">Upcoming 30 Days (Yellow)</option>
+                <option value="Safe / Paid">Safe / Paid</option>
+              </select>
+              <ChevronDown className="h-4 w-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            </div>
+
+            {/* Date Range Filter (From Date - To Date) */}
+            <div className="flex items-center gap-1.5 bg-white border border-gray-200 px-3 py-1.5 rounded-xl shadow-2xs text-xs text-gray-600">
+              <CalendarRange className="h-4 w-4 text-emerald-600 shrink-0" />
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">From:</span>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="bg-transparent text-gray-700 text-xs font-semibold focus:outline-none cursor-pointer"
+                />
+              </div>
+              <span className="text-gray-300 font-light mx-0.5">→</span>
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">To:</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="bg-transparent text-gray-700 text-xs font-semibold focus:outline-none cursor-pointer"
+                />
+              </div>
+              {(startDate || endDate) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStartDate('');
+                    setEndDate('');
+                  }}
+                  className="ml-1 text-gray-400 hover:text-rose-600 transition-colors p-0.5 rounded-full hover:bg-rose-50"
+                  title="Clear Date Range"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* University Filter Dropdown */}
-          <div className="relative w-full sm:w-52">
-            <Building className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-            <select
-              value={selectedUniversity}
-              onChange={(e) => setSelectedUniversity(e.target.value)}
-              className="w-full pl-9 pr-8 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium transition-all bg-white appearance-none cursor-pointer text-gray-700"
-            >
-              <option value="all">All Universities</option>
-              {availableUniversities.map((uni) => (
-                <option key={uni} value={uni}>
-                  {uni}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="h-4 w-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-          </div>
+          {/* Right Actions: Records Count Pill & Export Dropdown */}
+          <div className="flex items-center gap-2.5 shrink-0 w-full lg:w-auto justify-end">
+            <div className="text-xs font-bold text-slate-500 bg-white border border-gray-200 px-3 py-2 rounded-xl flex items-center gap-1.5 shadow-2xs">
+              <span>Displaying:</span>
+              <span className="text-emerald-600 font-extrabold">{filteredStudents.length}</span>
+              <span className="text-gray-400 font-normal">/ {students.length}</span>
+            </div>
 
-          {/* Counselor Filter Dropdown */}
-          <div className="relative w-full sm:w-48">
-            <User className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-            <select
-              value={selectedCounselor}
-              onChange={(e) => setSelectedCounselor(e.target.value)}
-              className="w-full pl-9 pr-8 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium transition-all bg-white appearance-none cursor-pointer text-gray-700"
-            >
-              <option value="all">All Counselors</option>
-              {availableCounselors.map((counselor) => (
-                <option key={counselor} value={counselor}>
-                  {counselor}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="h-4 w-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-          </div>
+            {/* Download / Export Menu */}
+            <div className="relative" ref={downloadMenuRef}>
+              <button
+                type="button"
+                onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-sm hover:shadow transition-all active:scale-95 cursor-pointer"
+                title="Download Filtered Records"
+              >
+                <Download className="h-4 w-4" />
+                <span>Export ({filteredStudents.length})</span>
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${showDownloadMenu ? 'rotate-180' : ''}`} />
+              </button>
 
-          {/* Session Filter Dropdown */}
-          <div className="relative w-full sm:w-44">
-            <select
-              value={sessionFilter}
-              onChange={(e) => setSessionFilter(e.target.value)}
-              className="w-full pl-4 pr-8 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium transition-all bg-white appearance-none cursor-pointer text-gray-700"
-            >
-              <option value="all">All Sessions</option>
-              {availableSessions.map((session) => (
-                <option key={session} value={session}>
-                  {session}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="h-4 w-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-          </div>
+              {showDownloadMenu && (
+                <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-gray-150 py-2.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="px-3.5 py-2 border-b border-gray-100">
+                    <p className="text-xs font-bold text-gray-800">Export Filtered Admissions</p>
+                    <p className="text-[11px] text-gray-500 mt-0.5">
+                      {filteredStudents.length} of {students.length} student{students.length === 1 ? '' : 's'} matching active filters
+                    </p>
+                  </div>
 
-          {/* Due Date Filter Dropdown */}
-          <div className="relative w-full sm:w-56">
-            <select
-              value={dueDateFilter}
-              onChange={(e) => setDueDateFilter(e.target.value)}
-              className="w-full pl-4 pr-8 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-400 font-medium transition-all bg-white appearance-none cursor-pointer text-gray-700"
-            >
-              <option value="">All Due Status</option>
-              <option value="Overdue (Red)">Overdue (Red)</option>
-              <option value="Upcoming 30 Days (Yellow)">Upcoming 30 Days (Yellow)</option>
-              <option value="Safe / Paid">Safe / Paid</option>
-            </select>
-            <ChevronDown className="h-4 w-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-          </div>
-        </div>
+                  <div className="p-1.5 space-y-1">
+                    <button
+                      type="button"
+                      onClick={handleExportExcel}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-left text-xs font-semibold text-gray-700 hover:bg-emerald-50 hover:text-emerald-800 rounded-xl transition-all cursor-pointer group"
+                    >
+                      <div className="p-2 bg-emerald-100 text-emerald-700 rounded-lg group-hover:bg-emerald-200 group-hover:scale-105 transition-all">
+                        <FileSpreadsheet className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-gray-900 group-hover:text-emerald-800">Excel Workbook (.xlsx)</div>
+                        <div className="text-[10px] text-gray-400 font-normal">Direct native Excel file download</div>
+                      </div>
+                    </button>
 
-        <div className="text-xs font-bold text-slate-500 bg-white border border-gray-150 px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-2xs shrink-0 w-full md:w-auto justify-center">
-          <span>Displaying Confirmed:</span>
-          <span className="text-emerald-600 font-extrabold">{filteredStudents.length} Records</span>
+                    <button
+                      type="button"
+                      onClick={handleExportCsv}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-left text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-800 rounded-xl transition-all cursor-pointer group"
+                    >
+                      <div className="p-2 bg-blue-100 text-blue-700 rounded-lg group-hover:bg-blue-200 group-hover:scale-105 transition-all">
+                        <FileText className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-gray-900 group-hover:text-blue-800">CSV File (.csv)</div>
+                        <div className="text-[10px] text-gray-400 font-normal">Universal comma-separated format</div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
