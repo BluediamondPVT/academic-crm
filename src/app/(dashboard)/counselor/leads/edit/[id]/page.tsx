@@ -449,7 +449,7 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
   const isCityDisabled = !isAdmin && !!student?.city;
 
   return (
-    <div className="space-y-6 font-sans text-gray-800 max-w-5xl mx-auto">
+    <div className="space-y-6 font-sans text-gray-800 w-full">
       {/* Page Header */}
       <div className="flex justify-between items-end pb-4 border-b border-gray-200">
         <div>

@@ -1,29 +1,40 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { StudentRecord, University } from './types';
-import StudentStats from './components/StudentStats';
-import StudentFilters from './components/StudentFilters';
-import StudentsTable from './components/StudentsTable';
+import { StudentRecord, University, InstituteRecord } from './types';
+import { INSTITUTE_COURSES, DEFAULT_INSTITUTE_RECORDS } from './constants';
+import TrackSwitcherTabs from './components/TrackSwitcherTabs';
+import AcademicView from './components/AcademicView';
+import InstituteView from './components/InstituteView';
 
 export default function CounselorStudentsPage() {
   const router = useRouter();
+
+  // 🔀 Active Track: 'academic' | 'institute'
+  const [activeTrack, setActiveTrack] = useState<'academic' | 'institute'>('academic');
+
+  // Academic State
   const [students, setStudents] = useState<StudentRecord[]>([]);
   const [universities, setUniversities] = useState<University[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-
-  // Search & Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [filterUniversity, setFilterUniversity] = useState('ALL');
   const [filterStatus, setFilterStatus] = useState('ALL');
 
+  // BDIT Institute State
+  const [instituteRecords, setInstituteRecords] = useState<InstituteRecord[]>([]);
+  const [instituteLoading, setInstituteLoading] = useState(false);
+  const [instituteSearch, setInstituteSearch] = useState('');
+  const [instituteFilterCourse, setInstituteFilterCourse] = useState('ALL');
+  const [instituteFilterSource, setInstituteFilterSource] = useState('ALL');
+  const [instituteFilterStatus, setInstituteFilterStatus] = useState('ALL');
+
   useEffect(() => {
     setIsAdmin(document.cookie.includes('userRole=ADMIN'));
     fetchData();
+    loadInstituteRecords();
   }, []);
 
   const fetchData = async () => {
@@ -50,9 +61,72 @@ export default function CounselorStudentsPage() {
     }
   };
 
-  // Filter students based on search, university dropdown, and stats click status
+  const loadInstituteRecords = async () => {
+    setInstituteLoading(true);
+    try {
+      const res = await fetch('/api/institute/students');
+      if (res.ok) {
+        const data = await res.json();
+        setInstituteRecords(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error('Error loading institute records:', err);
+    } finally {
+      setInstituteLoading(false);
+    }
+  };
+
+  const handleInstituteStatusUpdate = async (recordId: string, newStatus: string) => {
+    // Optimistic UI update
+    setInstituteRecords(prev =>
+      prev.map(r => ((r._id === recordId || r.id === recordId) ? { ...r, status: newStatus } : r))
+    );
+
+    try {
+      const res = await fetch(`/api/institute/students/${recordId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) {
+        loadInstituteRecords();
+      }
+    } catch (err) {
+      console.error('Error updating institute status:', err);
+      loadInstituteRecords();
+    }
+  };
+
+  const handleInstituteDelete = async (record: InstituteRecord) => {
+    const recordId = record._id || record.id;
+    if (!recordId) return;
+
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete enquiry record for ${record.firstName} ${record.lastName || ''}?`
+    );
+    if (!confirmDelete) return;
+
+    // Optimistic delete
+    setInstituteRecords(prev => prev.filter(r => r._id !== recordId && r.id !== recordId));
+
+    try {
+      const res = await fetch(`/api/institute/students/${recordId}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || 'Failed to delete institute record.');
+        loadInstituteRecords();
+      }
+    } catch (err) {
+      console.error('Error deleting institute record:', err);
+      alert('An error occurred while deleting the record.');
+      loadInstituteRecords();
+    }
+  };
+
+  // Filter Academic students
   const filteredStudents = students.filter(student => {
-    // Counselors should not see Admission records in the table/search results
     if (!isAdmin && student.status === 'Admission') {
       return false;
     }
@@ -73,6 +147,28 @@ export default function CounselorStudentsPage() {
     return matchesSearch && matchesUniversity && matchesStatus;
   });
 
+  // Filter Institute records
+  const filteredInstituteRecords = instituteRecords.filter(r => {
+    const fullName = `${r.firstName} ${r.middleName || ''} ${r.lastName || ''}`.toLowerCase();
+    const matchesSearch =
+      !instituteSearch ||
+      fullName.includes(instituteSearch.toLowerCase()) ||
+      r.mobile.includes(instituteSearch) ||
+      (r.course && r.course.toLowerCase().includes(instituteSearch.toLowerCase())) ||
+      (r.city && r.city.toLowerCase().includes(instituteSearch.toLowerCase()));
+
+    const matchesCourse =
+      instituteFilterCourse === 'ALL' || r.course === instituteFilterCourse;
+
+    const matchesSource =
+      instituteFilterSource === 'ALL' || r.enquiredFrom === instituteFilterSource;
+
+    const matchesStatus =
+      instituteFilterStatus === 'ALL' || (r.status || 'New Lead') === instituteFilterStatus;
+
+    return matchesSearch && matchesCourse && matchesSource && matchesStatus;
+  });
+
   const handleSelectStudent = (student: StudentRecord) => {
     router.push(`/counselor/leads/view/${student._id}`);
   };
@@ -90,7 +186,7 @@ export default function CounselorStudentsPage() {
         method: 'DELETE',
       });
       if (res.ok) {
-        fetchData(); // Refresh the list
+        fetchData();
       } else {
         const data = await res.json();
         alert(data.error || 'Failed to delete student record.');
@@ -101,63 +197,75 @@ export default function CounselorStudentsPage() {
     }
   };
 
+  const handleAcademicStatusClick = (statusName: string) => {
+    if (statusName === 'Total Enquiries') {
+      setFilterStatus('ALL');
+    } else if (statusName === 'Active Universities') {
+      // No action
+    } else {
+      setFilterStatus(prev => (prev === statusName ? 'ALL' : statusName));
+    }
+  };
+
+  const handleInstituteStatusClick = (statusName: string) => {
+    if (statusName === 'Total Enquiries') {
+      setInstituteFilterStatus('ALL');
+    } else {
+      setInstituteFilterStatus(prev => (prev === statusName ? 'ALL' : statusName));
+    }
+  };
+
   return (
     <div className="space-y-6 font-sans text-gray-800">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-xl font-extrabold text-[#112a46] tracking-tight">
-            Student Management
-          </h1>
-          <p className="mt-0.5 text-xs text-gray-500 font-medium">
-            Enroll students and allocate university courses according to university listings
-          </p>
-        </div>
-
-        <Link
-          href="/counselor/leads/create"
-          className="px-5 py-2.5 bg-[#112a46] hover:bg-[#1a3d66] text-white text-sm font-semibold rounded-xl shadow-md transition-all flex items-center gap-2 group"
-        >
-          <Plus className="h-4 w-4 group-hover:scale-110 transition-transform" />
-          Add Enquiry
-        </Link>
-      </div>
-
-      {/* Overview Stats */}
-      <StudentStats 
-        students={students} 
-        universities={universities} 
-        activeStatus={filterStatus}
-        isAdmin={isAdmin}
-        onStatusClick={(statusName) => {
-          if (statusName === 'Total Enquiries') {
+      {/* 🔀 Program Track Switcher Tabs */}
+      <TrackSwitcherTabs
+        activeTrack={activeTrack}
+        onTrackChange={track => {
+          setActiveTrack(track);
+          if (track === 'academic') {
             setFilterStatus('ALL');
-          } else if (statusName === 'Active Universities') {
-            // No action/filter reset
           } else {
-            setFilterStatus(prev => prev === statusName ? 'ALL' : statusName);
+            setInstituteFilterStatus('ALL');
           }
         }}
       />
 
-      {/* Filter & Search Controls */}
-      <StudentFilters
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        filterUniversity={filterUniversity}
-        onFilterUniversityChange={setFilterUniversity}
-        universities={universities}
-      />
-
-      {/* Students Table */}
-      <StudentsTable
-        students={filteredStudents}
-        loading={loading}
-        onSelectStudent={handleSelectStudent}
-        onEditStudent={handleEditStudent}
-        isAdmin={isAdmin}
-        onDeleteStudent={handleDeleteStudent}
-      />
+      {/* Main Track View */}
+      {activeTrack === 'academic' ? (
+        <AcademicView
+          students={students}
+          universities={universities}
+          filteredStudents={filteredStudents}
+          loading={loading}
+          isAdmin={isAdmin}
+          filterStatus={filterStatus}
+          onFilterStatusChange={handleAcademicStatusClick}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          filterUniversity={filterUniversity}
+          onFilterUniversityChange={setFilterUniversity}
+          onSelectStudent={handleSelectStudent}
+          onEditStudent={handleEditStudent}
+          onDeleteStudent={handleDeleteStudent}
+        />
+      ) : (
+        <InstituteView
+          records={instituteRecords}
+          filteredRecords={filteredInstituteRecords}
+          loading={instituteLoading}
+          activeStatus={instituteFilterStatus}
+          onStatusClick={handleInstituteStatusClick}
+          searchTerm={instituteSearch}
+          onSearchChange={setInstituteSearch}
+          filterCourse={instituteFilterCourse}
+          onFilterCourseChange={setInstituteFilterCourse}
+          filterSource={instituteFilterSource}
+          onFilterSourceChange={setInstituteFilterSource}
+          courses={INSTITUTE_COURSES}
+          onDeleteRecord={handleInstituteDelete}
+          onUpdateStatus={handleInstituteStatusUpdate}
+        />
+      )}
     </div>
   );
 }

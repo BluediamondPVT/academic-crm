@@ -84,3 +84,43 @@ export interface StudentRecord {
   createdAt: string;
   updatedAt?: string;
 }
+
+export interface InstituteRemarkHistory {
+  remark: string;
+  updatedAt: string;
+  status?: string;
+  updatedBy?: string;
+}
+
+export interface InstituteRecord {
+  _id?: string;
+  id?: string;
+  firstName: string;
+  middleName?: string;
+  lastName?: string;
+  parentName?: string;
+  mobile: string;
+  alternateMobile?: string;
+  parentEmail?: string;
+  address?: string;
+  dob?: string;
+  gender?: string;
+  course: string;
+  qualification?: string;
+  fatherOccupation?: string;
+  institutionName?: string;
+  city?: string;
+  enquiredFrom?: string;
+  status: string;
+  counselorId?: string;
+  counselorName?: string;
+  counselorRole?: string;
+  remark?: string;
+  remarkUpdatedAt?: string;
+  remarkHistory?: InstituteRemarkHistory[];
+  courseFee?: number;
+  paidAmount?: number;
+  remainingAmount?: number;
+  createdAt: string;
+  updatedAt?: string;
+}
