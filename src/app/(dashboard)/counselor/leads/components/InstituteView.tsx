@@ -11,32 +11,44 @@ interface InstituteViewProps {
   records: InstituteRecord[];
   filteredRecords: InstituteRecord[];
   loading: boolean;
+  isAdmin?: boolean;
   activeStatus: string;
   onStatusClick: (statusName: string) => void;
   searchTerm: string;
   onSearchChange: (value: string) => void;
+  filterBranch: string;
+  onFilterBranchChange: (value: string) => void;
+  branches: string[];
   filterCourse: string;
   onFilterCourseChange: (value: string) => void;
   filterSource: string;
   onFilterSourceChange: (value: string) => void;
   courses: string[];
+  onSelectRecord?: (record: InstituteRecord) => void;
+  onEditRecord?: (record: InstituteRecord) => void;
   onDeleteRecord: (record: InstituteRecord) => void;
-  onUpdateStatus: (recordId: string, newStatus: string) => void;
+  onUpdateStatus?: (recordId: string, newStatus: string) => Promise<void>;
 }
 
 export default function InstituteView({
   records,
   filteredRecords,
   loading,
+  isAdmin,
   activeStatus,
   onStatusClick,
   searchTerm,
   onSearchChange,
+  filterBranch,
+  onFilterBranchChange,
+  branches,
   filterCourse,
   onFilterCourseChange,
   filterSource,
   onFilterSourceChange,
   courses,
+  onSelectRecord,
+  onEditRecord,
   onDeleteRecord,
   onUpdateStatus,
 }: InstituteViewProps) {
@@ -64,6 +76,9 @@ export default function InstituteView({
       <InstituteFilters
         searchTerm={searchTerm}
         onSearchChange={onSearchChange}
+        filterBranch={filterBranch}
+        onFilterBranchChange={onFilterBranchChange}
+        branches={branches}
         filterCourse={filterCourse}
         onFilterCourseChange={onFilterCourseChange}
         filterSource={filterSource}
@@ -75,8 +90,10 @@ export default function InstituteView({
       <InstituteTable
         records={filteredRecords}
         loading={loading}
+        isAdmin={isAdmin}
+        onSelectRecord={onSelectRecord}
+        onEditRecord={onEditRecord}
         onDeleteRecord={onDeleteRecord}
-        onUpdateStatus={onUpdateStatus}
       />
     </div>
   );

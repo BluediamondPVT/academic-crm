@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Loader2, Edit3 } from 'lucide-react';
 import { StudentRecord } from '../../types';
+import InstituteViewLead from './components/InstituteViewLead';
 
 import { PersonalInfoCard } from './components/PersonalInfoCard';
 import { RemarksHistoryCard } from './components/RemarksHistoryCard';
@@ -19,6 +20,7 @@ export default function ViewLeadPage({ params }: ViewLeadPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fromAdmissions = searchParams.get('from') === 'admissions';
+  const isInstitute = searchParams.get('track') === 'institute';
   const [studentId, setStudentId] = useState<string | null>(null);
   const [student, setStudent] = useState<StudentRecord | null>(null);
   const [loading, setLoading] = useState(true);
@@ -31,10 +33,10 @@ export default function ViewLeadPage({ params }: ViewLeadPageProps) {
   }, [params]);
 
   useEffect(() => {
-    if (studentId) {
+    if (studentId && !isInstitute) {
       fetchStudent();
     }
-  }, [studentId]);
+  }, [studentId, isInstitute]);
 
   const fetchStudent = async () => {
     setLoading(true);
@@ -56,8 +58,21 @@ export default function ViewLeadPage({ params }: ViewLeadPageProps) {
 
   const goBack = () => {
     const isAdmin = document.cookie.includes('userRole=ADMIN');
-    router.push(fromAdmissions ? '/admissions' : (isAdmin ? '/admin/students' : '/counselor/leads'));
+    const trackQuery = isInstitute ? '?track=institute' : '';
+    router.push(fromAdmissions ? '/admissions' : (isAdmin ? `/admin/students${trackQuery}` : `/counselor/leads${trackQuery}`));
   };
+
+  if (isInstitute) {
+    if (!studentId) {
+      return (
+        <div className="flex flex-col items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-[#112a46]" />
+          <p className="text-xs text-gray-400 mt-2">Loading institute lead details...</p>
+        </div>
+      );
+    }
+    return <InstituteViewLead studentId={studentId} onBack={goBack} />;
+  }
 
   if (loading) {
     return (

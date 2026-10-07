@@ -1,15 +1,20 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Laptop, Loader2 } from 'lucide-react';
-import { INSTITUTE_COURSES, INSTITUTE_SOURCES } from '../../constants';
+import React from "react";
+import { Laptop, Loader2 } from "lucide-react";
+import {
+  INSTITUTE_COURSES,
+  INSTITUTE_SOURCES,
+  INSTITUTE_BRANCHES,
+} from "../../constants";
 
 interface InstituteLeadFormProps {
   instituteData: {
+    branch: string;
     firstName: string;
     middleName: string;
     lastName: string;
-    parentName: string;
+    parentName?: string;
     mobile: string;
     alternateMobile: string;
     parentEmail: string;
@@ -25,7 +30,9 @@ interface InstituteLeadFormProps {
   };
   formLoading: boolean;
   onInputChange: (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
   ) => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
@@ -93,22 +100,8 @@ export default function InstituteLeadForm({
             </div>
           </div>
 
-          {/* Row 2: Parent Name, Mobile */}
+          {/* Row 2: Mobile, Alternate Mobile */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                Parent&apos;s Name
-              </label>
-              <input
-                type="text"
-                name="parentName"
-                value={instituteData.parentName}
-                onChange={onInputChange}
-                placeholder="Parent Name"
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all"
-              />
-            </div>
-
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Student / Parent Mobile <span className="text-red-500">*</span>
@@ -123,10 +116,7 @@ export default function InstituteLeadForm({
                 className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all"
               />
             </div>
-          </div>
 
-          {/* Row 3: Alternate Mobile, Parent Email */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Alternate Mobile
@@ -140,7 +130,10 @@ export default function InstituteLeadForm({
                 className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all"
               />
             </div>
+          </div>
 
+          {/* Row 3: Parent Email, Gender */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Parent Email
@@ -154,41 +147,7 @@ export default function InstituteLeadForm({
                 className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all"
               />
             </div>
-          </div>
 
-          {/* Row 4: Address, Date of Birth */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                Address
-              </label>
-              <textarea
-                name="address"
-                rows={3}
-                value={instituteData.address}
-                onChange={onInputChange}
-                placeholder="Complete Address"
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all resize-y"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                Date of Birth
-              </label>
-              <input
-                type="date"
-                name="dob"
-                value={instituteData.dob}
-                onChange={onInputChange}
-                placeholder="mm/dd/yyyy"
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all"
-              />
-            </div>
-          </div>
-
-          {/* Row 5: Gender, Course */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Gender
@@ -205,7 +164,10 @@ export default function InstituteLeadForm({
                 <option value="Other">Other</option>
               </select>
             </div>
+          </div>
 
+          {/* Row 4: Address, Date of Birth */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Course
@@ -217,17 +179,43 @@ export default function InstituteLeadForm({
                 className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all cursor-pointer"
               >
                 <option value="">Select Course</option>
-                {INSTITUTE_COURSES.map(course => (
+                {INSTITUTE_COURSES.map((course) => (
                   <option key={course} value={course}>
                     {course}
                   </option>
                 ))}
               </select>
             </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Date of Birth
+              </label>
+              <input
+                type="date"
+                name="dob"
+                value={instituteData.dob}
+                onChange={onInputChange}
+                placeholder="mm/dd/yyyy"
+                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all"
+              />
+            </div>
           </div>
 
-          {/* Row 6: Qualification, Father Occupation */}
+          {/* Row 5: Course, Qualification */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                College / School Name
+              </label>
+              <input
+                type="text"
+                name="institutionName"
+                value={instituteData.institutionName}
+                onChange={onInputChange}
+                placeholder="Institution Name"
+                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all"
+              />
+            </div>
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Qualification
@@ -241,7 +229,10 @@ export default function InstituteLeadForm({
                 className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all"
               />
             </div>
+          </div>
 
+          {/* Row 6: Father Occupation, College / School Name */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Father Occupation
@@ -252,23 +243,6 @@ export default function InstituteLeadForm({
                 value={instituteData.fatherOccupation}
                 onChange={onInputChange}
                 placeholder="Occupation"
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all"
-              />
-            </div>
-          </div>
-
-          {/* Row 7: College / School Name, City */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                College / School Name
-              </label>
-              <input
-                type="text"
-                name="institutionName"
-                value={instituteData.institutionName}
-                onChange={onInputChange}
-                placeholder="Institution Name"
                 className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all"
               />
             </div>
@@ -288,8 +262,27 @@ export default function InstituteLeadForm({
             </div>
           </div>
 
-          {/* Row 8: Enquired From */}
+          {/* Row 7: Branch & Enquired From */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Branch
+              </label>
+              <select
+                name="branch"
+                value={instituteData.branch || ""}
+                onChange={onInputChange}
+                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all cursor-pointer"
+              >
+                <option value="">Select Branch</option>
+                {INSTITUTE_BRANCHES.map((branch) => (
+                  <option key={branch} value={branch}>
+                    {branch}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Enquired From
@@ -300,15 +293,31 @@ export default function InstituteLeadForm({
                 onChange={onInputChange}
                 className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all cursor-pointer"
               >
-                <option value="">Select</option>
-                {INSTITUTE_SOURCES.map(source => (
+                <option value="">Select Source</option>
+                {INSTITUTE_SOURCES.map((source) => (
                   <option key={source} value={source}>
                     {source}
                   </option>
                 ))}
               </select>
             </div>
-            <div className="hidden md:block" />
+          </div>
+
+          {/* Row 4: Address, Date of Birth */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Address
+              </label>
+              <textarea
+                name="address"
+                rows={3}
+                value={instituteData.address}
+                onChange={onInputChange}
+                placeholder="Complete Address"
+                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder:text-gray-400 bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all resize-y"
+              />
+            </div>
           </div>
 
           {/* Footer Buttons */}

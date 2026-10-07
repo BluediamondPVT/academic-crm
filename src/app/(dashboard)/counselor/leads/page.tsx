@@ -1,18 +1,28 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { StudentRecord, University, InstituteRecord } from './types';
-import { INSTITUTE_COURSES, DEFAULT_INSTITUTE_RECORDS } from './constants';
+import { INSTITUTE_COURSES, INSTITUTE_BRANCHES, DEFAULT_INSTITUTE_RECORDS } from './constants';
 import TrackSwitcherTabs from './components/TrackSwitcherTabs';
 import AcademicView from './components/AcademicView';
 import InstituteView from './components/InstituteView';
 
 export default function CounselorStudentsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const trackParam = searchParams.get('track');
 
   // 🔀 Active Track: 'academic' | 'institute'
-  const [activeTrack, setActiveTrack] = useState<'academic' | 'institute'>('academic');
+  const [activeTrack, setActiveTrack] = useState<'academic' | 'institute'>(
+    trackParam === 'institute' ? 'institute' : 'academic'
+  );
+
+  useEffect(() => {
+    if (trackParam === 'institute' || trackParam === 'academic') {
+      setActiveTrack(trackParam);
+    }
+  }, [trackParam]);
 
   // Academic State
   const [students, setStudents] = useState<StudentRecord[]>([]);
@@ -28,6 +38,7 @@ export default function CounselorStudentsPage() {
   const [instituteLoading, setInstituteLoading] = useState(false);
   const [instituteSearch, setInstituteSearch] = useState('');
   const [instituteFilterCourse, setInstituteFilterCourse] = useState('ALL');
+  const [instituteFilterBranch, setInstituteFilterBranch] = useState('ALL');
   const [instituteFilterSource, setInstituteFilterSource] = useState('ALL');
   const [instituteFilterStatus, setInstituteFilterStatus] = useState('ALL');
 
@@ -155,10 +166,14 @@ export default function CounselorStudentsPage() {
       fullName.includes(instituteSearch.toLowerCase()) ||
       r.mobile.includes(instituteSearch) ||
       (r.course && r.course.toLowerCase().includes(instituteSearch.toLowerCase())) ||
-      (r.city && r.city.toLowerCase().includes(instituteSearch.toLowerCase()));
+      (r.city && r.city.toLowerCase().includes(instituteSearch.toLowerCase())) ||
+      (r.branch && r.branch.toLowerCase().includes(instituteSearch.toLowerCase()));
 
     const matchesCourse =
       instituteFilterCourse === 'ALL' || r.course === instituteFilterCourse;
+
+    const matchesBranch =
+      instituteFilterBranch === 'ALL' || r.branch === instituteFilterBranch;
 
     const matchesSource =
       instituteFilterSource === 'ALL' || r.enquiredFrom === instituteFilterSource;
@@ -166,7 +181,7 @@ export default function CounselorStudentsPage() {
     const matchesStatus =
       instituteFilterStatus === 'ALL' || (r.status || 'New Lead') === instituteFilterStatus;
 
-    return matchesSearch && matchesCourse && matchesSource && matchesStatus;
+    return matchesSearch && matchesCourse && matchesBranch && matchesSource && matchesStatus;
   });
 
   const handleSelectStudent = (student: StudentRecord) => {
@@ -175,6 +190,20 @@ export default function CounselorStudentsPage() {
 
   const handleEditStudent = (student: StudentRecord) => {
     router.push(`/counselor/leads/edit/${student._id}`);
+  };
+
+  const handleSelectInstituteStudent = (record: InstituteRecord) => {
+    const id = record._id || record.id;
+    if (id) {
+      router.push(`/counselor/leads/view/${id}?track=institute`);
+    }
+  };
+
+  const handleEditInstituteStudent = (record: InstituteRecord) => {
+    const id = record._id || record.id;
+    if (id) {
+      router.push(`/counselor/leads/edit/${id}?track=institute`);
+    }
   };
 
   const handleDeleteStudent = async (student: StudentRecord) => {
@@ -226,6 +255,7 @@ export default function CounselorStudentsPage() {
             setFilterStatus('ALL');
           } else {
             setInstituteFilterStatus('ALL');
+            setInstituteFilterBranch('ALL');
           }
         }}
       />
@@ -253,15 +283,21 @@ export default function CounselorStudentsPage() {
           records={instituteRecords}
           filteredRecords={filteredInstituteRecords}
           loading={instituteLoading}
+          isAdmin={isAdmin}
           activeStatus={instituteFilterStatus}
           onStatusClick={handleInstituteStatusClick}
           searchTerm={instituteSearch}
           onSearchChange={setInstituteSearch}
+          filterBranch={instituteFilterBranch}
+          onFilterBranchChange={setInstituteFilterBranch}
+          branches={INSTITUTE_BRANCHES}
           filterCourse={instituteFilterCourse}
           onFilterCourseChange={setInstituteFilterCourse}
           filterSource={instituteFilterSource}
           onFilterSourceChange={setInstituteFilterSource}
           courses={INSTITUTE_COURSES}
+          onSelectRecord={handleSelectInstituteStudent}
+          onEditRecord={handleEditInstituteStudent}
           onDeleteRecord={handleInstituteDelete}
           onUpdateStatus={handleInstituteStatusUpdate}
         />

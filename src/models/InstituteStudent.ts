@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from "mongoose";
 
 export interface IInstituteRemarkHistory {
   remark: string;
@@ -11,6 +11,7 @@ export interface IInstituteStudent extends Document {
   firstName: string;
   middleName?: string;
   lastName?: string;
+  branch?: string;
   parentName?: string;
   mobile: string;
   alternateMobile?: string;
@@ -56,20 +57,25 @@ const InstituteStudentSchema: Schema = new Schema(
     institutionName: { type: String, trim: true },
     city: { type: String, trim: true },
     enquiredFrom: { type: String, trim: true },
+    branch: {
+      type: String,
+      enum: ["Mumbra Branch", "Bhiwandi Branch", "Andheri Branch", ""],
+      trim: true,
+    },
     status: {
       type: String,
       enum: [
-        'New Lead',
-        'Active On Call',
-        'Center Visit',
-        'Demo / Counseling',
-        'Follow-Up',
-        'Batch Processing',
-        'Hold',
-        'Lost',
-        'Admission',
+        "New Lead",
+        "Active On Call",
+        "Center Visit",
+        "Demo / Counseling",
+        "Follow-Up",
+        "Batch Processing",
+        "Hold",
+        "Lost",
+        "Admission",
       ],
-      default: 'New Lead',
+      default: "New Lead",
       index: true,
     },
     counselorId: { type: String, index: true },
@@ -89,15 +95,15 @@ const InstituteStudentSchema: Schema = new Schema(
     paidAmount: { type: Number, default: 0 },
     remainingAmount: { type: Number, default: 0 },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-InstituteStudentSchema.pre('save', function (this: any) {
+InstituteStudentSchema.pre("save", function (this: any) {
   if (
-    this.isModified('remark') &&
+    this.isModified("remark") &&
     this.remark &&
-    typeof this.remark === 'string' &&
-    this.remark.trim() !== ''
+    typeof this.remark === "string" &&
+    this.remark.trim() !== ""
   ) {
     this.remarkUpdatedAt = new Date();
   }
@@ -108,8 +114,8 @@ if (mongoose.models.InstituteStudent) {
 }
 
 const InstituteStudent = mongoose.model<IInstituteStudent>(
-  'InstituteStudent',
-  InstituteStudentSchema
+  "InstituteStudent",
+  InstituteStudentSchema,
 );
 
 export default InstituteStudent;

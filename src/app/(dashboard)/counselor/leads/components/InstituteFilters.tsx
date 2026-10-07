@@ -6,6 +6,9 @@ import { Search } from 'lucide-react';
 interface InstituteFiltersProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
+  filterBranch: string;
+  onFilterBranchChange: (value: string) => void;
+  branches: string[];
   filterCourse: string;
   onFilterCourseChange: (value: string) => void;
   filterSource: string;
@@ -16,6 +19,9 @@ interface InstituteFiltersProps {
 export default function InstituteFilters({
   searchTerm,
   onSearchChange,
+  filterBranch,
+  onFilterBranchChange,
+  branches,
   filterCourse,
   onFilterCourseChange,
   filterSource,
@@ -29,7 +35,7 @@ export default function InstituteFilters({
         <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
         <input
           type="text"
-          placeholder="Search student, mobile, course, city..."
+          placeholder="Search student, mobile, course, city, branch..."
           value={searchTerm}
           onChange={e => onSearchChange(e.target.value)}
           className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -38,6 +44,23 @@ export default function InstituteFilters({
 
       {/* Filter Dropdowns */}
       <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+        {/* Branch Filter */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-gray-500 uppercase">Branch:</span>
+          <select
+            value={filterBranch}
+            onChange={e => onFilterBranchChange(e.target.value)}
+            className="px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+          >
+            <option value="ALL">All Branches</option>
+            {branches.map(branch => (
+              <option key={branch} value={branch}>
+                {branch}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold text-gray-500 uppercase">Filter Course:</span>
           <select

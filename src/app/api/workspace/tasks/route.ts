@@ -9,15 +9,15 @@ export async function GET(request: NextRequest) {
   try {
     await connectToDatabase();
     const auth = await verifyApiAuth(request);
-    
+
     if (auth.error || !auth.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Fetch tasks assigned to the current user
     const tasks = await Task.find({ assignee: auth.user.userId })
-      .populate('assignee', 'name email role')
-      .populate('assignedBy', 'name email role')
+      .populate("assignee", "name email role")
+      .populate("assignedBy", "name email role")
       .sort({ createdAt: -1 });
 
     return NextResponse.json({ success: true, data: tasks }, { status: 200 });
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching workspace tasks:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

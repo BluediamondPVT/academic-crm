@@ -19,6 +19,7 @@ import {
   Building,
 } from 'lucide-react';
 import { StudentRecord } from '../../types';
+import EditInstituteLead from './components/EditInstituteLead';
 
 interface EditLeadPageProps {
   params: Promise<{ id: string }>;
@@ -28,6 +29,7 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fromAdmissions = searchParams.get('from') === 'admissions';
+  const isInstitute = searchParams.get('track') === 'institute';
   const [studentId, setStudentId] = useState<string | null>(null);
   const [student, setStudent] = useState<StudentRecord | null>(null);
   const [loading, setLoading] = useState(true);
@@ -78,10 +80,10 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
   }, [params]);
 
   useEffect(() => {
-    if (studentId) {
+    if (studentId && !isInstitute) {
       fetchStudentAndUniversities();
     }
-  }, [studentId]);
+  }, [studentId, isInstitute]);
 
   const recalculateFinancials = (
     newAdmFee: number | '',
@@ -335,7 +337,8 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
   };
 
   const goBack = () => {
-    router.push(fromAdmissions ? '/admissions' : (isAdmin ? '/admin/students' : '/counselor/leads'));
+    const trackQuery = isInstitute ? '?track=institute' : '';
+    router.push(fromAdmissions ? '/admissions' : (isAdmin ? `/admin/students${trackQuery}` : `/counselor/leads${trackQuery}`));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -432,6 +435,18 @@ export default function EditLeadPage({ params }: EditLeadPageProps) {
       setFormLoading(false);
     }
   };
+
+  if (isInstitute) {
+    if (!studentId) {
+      return (
+        <div className="flex flex-col items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-[#112a46]" />
+          <p className="text-xs text-gray-400 mt-2">Loading institute lead details...</p>
+        </div>
+      );
+    }
+    return <EditInstituteLead studentId={studentId} onBack={goBack} />;
+  }
 
   if (loading) {
     return (

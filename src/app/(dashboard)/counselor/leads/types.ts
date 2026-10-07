@@ -12,20 +12,24 @@ export interface Course {
 export interface University {
   _id: string;
   name: string;
-  aggregator?: string | {
-    name: string;
-    email?: string;
-    number?: string;
-    location?: string;
-    whatsapp?: string;
-  };
-  aggregation?: string | {
-    name: string;
-    email?: string;
-    number?: string;
-    location?: string;
-    whatsapp?: string;
-  };
+  aggregator?:
+    | string
+    | {
+        name: string;
+        email?: string;
+        number?: string;
+        location?: string;
+        whatsapp?: string;
+      };
+  aggregation?:
+    | string
+    | {
+        name: string;
+        email?: string;
+        number?: string;
+        location?: string;
+        whatsapp?: string;
+      };
   location: string;
   modeOfLearning: string;
   courses: Course[];
@@ -121,6 +125,7 @@ export interface InstituteRecord {
   courseFee?: number;
   paidAmount?: number;
   remainingAmount?: number;
+  branch?: string;
   createdAt: string;
   updatedAt?: string;
 }

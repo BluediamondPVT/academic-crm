@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Loader2, AlertCircle, CheckCircle } from 'lucide-react';
-import { University } from '../types';
-import TrackSelector from './components/TrackSelector';
-import AcademicLeadForm from './components/AcademicLeadForm';
-import InstituteLeadForm from './components/InstituteLeadForm';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
+import { University } from "../types";
+import TrackSelector from "./components/TrackSelector";
+import AcademicLeadForm from "./components/AcademicLeadForm";
+import InstituteLeadForm from "./components/InstituteLeadForm";
 
 export default function CreateLeadPage() {
   const router = useRouter();
@@ -14,116 +14,131 @@ export default function CreateLeadPage() {
   const [loadingUniversities, setLoadingUniversities] = useState(true);
 
   // 🔀 Program Track: 'academic' | 'institute'
-  const [programTrack, setProgramTrack] = useState<'academic' | 'institute'>('academic');
+  const [programTrack, setProgramTrack] = useState<"academic" | "institute">(
+    "academic",
+  );
 
   // Academic Lead Form State
   const [formData, setFormData] = useState({
-    name: '',
-    phoneNumber: '',
-    email: '',
-    remark: '',
-    city: '',
-    status: 'New Lead',
-    universityId: '',
-    courseIndex: '',
-    learningMode: 'Online',
-    session: 'July 2026',
-    paymentPlan: 'Installments',
-    amountPayingNow: '',
-    paymentMode: 'UPI',
-    nextDueDate: '',
+    name: "",
+    phoneNumber: "",
+    email: "",
+    remark: "",
+    city: "",
+    status: "New Lead",
+    universityId: "",
+    courseIndex: "",
+    learningMode: "Online",
+    session: "July 2026",
+    paymentPlan: "Installments",
+    amountPayingNow: "",
+    paymentMode: "UPI",
+    nextDueDate: "",
   });
 
   // BDIT Institute Admission Form State
   const [instituteData, setInstituteData] = useState({
-    firstName: '',
-    middleName: '',
-    lastName: '',
-    parentName: '',
-    mobile: '',
-    alternateMobile: '',
-    parentEmail: '',
-    address: '',
-    dob: '',
-    gender: '',
-    course: '',
-    qualification: '',
-    fatherOccupation: '',
-    institutionName: '',
-    city: '',
-    enquiredFrom: '',
+    firstName: "",
+    middleName: "",
+    lastName: "",
+    branch: "",
+    parentName: "",
+    mobile: "",
+    alternateMobile: "",
+    parentEmail: "",
+    address: "",
+    dob: "",
+    gender: "",
+    course: "",
+    qualification: "",
+    fatherOccupation: "",
+    institutionName: "",
+    city: "",
+    enquiredFrom: "",
   });
 
   const [formLoading, setFormLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     fetchUniversities();
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      if (params.get('track') === 'institute') {
-        setProgramTrack('institute');
+      if (params.get("track") === "institute") {
+        setProgramTrack("institute");
       }
     }
   }, []);
 
   const fetchUniversities = async () => {
     try {
-      const res = await fetch('/api/admin/universities');
+      const res = await fetch("/api/admin/universities");
       if (res.ok) {
         const data = await res.json();
         setUniversities(Array.isArray(data) ? data : []);
       }
     } catch (err) {
-      console.error('Error fetching universities:', err);
+      console.error("Error fetching universities:", err);
     } finally {
       setLoadingUniversities(false);
     }
   };
 
-  const selectedUniversity = universities.find(u => u._id === formData.universityId);
+  const selectedUniversity = universities.find(
+    (u) => u._id === formData.universityId,
+  );
   const selectedCourse =
-    selectedUniversity && formData.courseIndex !== ''
+    selectedUniversity && formData.courseIndex !== ""
       ? selectedUniversity.courses[Number(formData.courseIndex)]
       : null;
 
   const handleAcademicChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
   ) => {
     const { name, value } = e.target;
-    if (name === 'universityId') {
-      setFormData(prev => ({ ...prev, universityId: value, courseIndex: '' }));
+    if (name === "universityId") {
+      setFormData((prev) => ({
+        ...prev,
+        universityId: value,
+        courseIndex: "",
+      }));
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
   const handleInstituteChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
   ) => {
     const { name, value } = e.target;
-    setInstituteData(prev => ({ ...prev, [name]: value }));
+    setInstituteData((prev) => ({ ...prev, [name]: value }));
   };
 
   const goBack = () => {
-    const isAdmin = document.cookie.includes('userRole=ADMIN');
-    router.push(isAdmin ? '/admin/students' : '/counselor/leads');
+    const isAdmin = document.cookie.includes("userRole=ADMIN");
+    router.push(isAdmin ? "/admin/students" : "/counselor/leads");
   };
 
   // Academic Lead Submit Handler
   const handleAcademicSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
     if (!formData.name.trim() || !formData.phoneNumber.trim()) {
-      setError('Please enter both student name and phone number.');
+      setError("Please enter both student name and phone number.");
       return;
     }
 
     if (!selectedUniversity || !selectedCourse) {
-      setError('Please select both university and course for academic admission.');
+      setError(
+        "Please select both university and course for academic admission.",
+      );
       return;
     }
 
@@ -141,45 +156,45 @@ export default function CreateLeadPage() {
   // BDIT Institute Lead Submit Handler
   const handleInstituteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
     if (!instituteData.firstName.trim()) {
-      setError('Please enter student First Name.');
+      setError("Please enter student First Name.");
       return;
     }
     if (!instituteData.mobile.trim()) {
-      setError('Please enter Student / Parent Mobile number.');
+      setError("Please enter Student / Parent Mobile number.");
       return;
     }
     if (!instituteData.course) {
-      setError('Please select a course.');
+      setError("Please select a course.");
       return;
     }
 
     setFormLoading(true);
 
     try {
-      const res = await fetch('/api/institute/students', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/institute/students", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(instituteData),
       });
 
       if (res.ok) {
         setSuccess(
-          `Student Admission Enquiry for ${instituteData.firstName} ${instituteData.lastName} recorded successfully!`
+          `Student Admission Enquiry for ${instituteData.firstName} ${instituteData.lastName} recorded successfully!`,
         );
         setTimeout(() => {
           goBack();
         }, 1200);
       } else {
         const data = await res.json();
-        setError(data.error || 'Failed to save student admission enquiry.');
+        setError(data.error || "Failed to save student admission enquiry.");
       }
     } catch (err: any) {
-      console.error('Error saving institute enquiry:', err);
-      setError('An unexpected error occurred while saving the enquiry.');
+      console.error("Error saving institute enquiry:", err);
+      setError("An unexpected error occurred while saving the enquiry.");
     } finally {
       setFormLoading(false);
     }
@@ -189,7 +204,9 @@ export default function CreateLeadPage() {
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <Loader2 className="h-8 w-8 animate-spin text-[#112a46]" />
-        <p className="text-xs text-gray-400 mt-2">Loading university listings...</p>
+        <p className="text-xs text-gray-400 mt-2">
+          Loading university listings...
+        </p>
       </div>
     );
   }
@@ -235,7 +252,7 @@ export default function CreateLeadPage() {
             </div>
           )}
 
-          {programTrack === 'academic' ? (
+          {programTrack === "academic" ? (
             <AcademicLeadForm
               formData={formData}
               universities={universities}
