@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { 
-  LayoutDashboard, 
-  Users, 
-  Settings, 
-  LogOut, 
-  ChevronLeft, 
+import {
+  LayoutDashboard,
+  Users,
+  Settings,
+  LogOut,
+  ChevronLeft,
   ChevronRight,
   X,
   GraduationCap,
@@ -31,7 +31,8 @@ export default function Sidebar({ role }: SidebarProps) {
   useEffect(() => {
     const handleToggle = () => setIsMobileOpen((prev) => !prev);
     window.addEventListener("toggle-mobile-sidebar", handleToggle);
-    return () => window.removeEventListener("toggle-mobile-sidebar", handleToggle);
+    return () =>
+      window.removeEventListener("toggle-mobile-sidebar", handleToggle);
   }, []);
 
   useEffect(() => {
@@ -44,7 +45,9 @@ export default function Sidebar({ role }: SidebarProps) {
         if (res.ok) {
           const data = await res.json();
           if (data.success && Array.isArray(data.data)) {
-            const pending = data.data.filter((t: any) => t.status !== "COMPLETED").length;
+            const pending = data.data.filter(
+              (t: any) => t.status !== "COMPLETED",
+            ).length;
             setTaskCount(pending);
             setHasTasks(data.data.length > 0 || role === "STAFF");
           }
@@ -70,7 +73,7 @@ export default function Sidebar({ role }: SidebarProps) {
       }
     } catch (err) {
       console.error(err);
-    } 
+    }
   };
 
   const getDashboardHref = () => {
@@ -82,38 +85,78 @@ export default function Sidebar({ role }: SidebarProps) {
 
   const navItems = [
     // Primary Dashboard for non-staff roles (Staff uses Tasks directly)
-    ...(role !== "STAFF" ? [
-      { name: "Dashboard", href: getDashboardHref(), icon: LayoutDashboard }
-    ] : []),
-    
+    ...(role !== "STAFF"
+      ? [{ name: "Dashboard", href: getDashboardHref(), icon: LayoutDashboard }]
+      : []),
+
     // 🔥 Admin Only Tabs
-    ...(role === "ADMIN" ? [
-      { name: "Staff", href: "/admin/staff", icon: Users },
-      { name: "Universities", href: "/admin/universities", icon: GraduationCap },
-      { name: "Tasks", href: "/admin/tasks", icon: ClipboardList },
-      { name: "Leads", href: "/admin/students", icon: Headset },
-      { name: "Admission", href: "/admissions", icon: Users }
-    ] : []),
+    ...(role === "ADMIN"
+      ? [
+          { name: "Staff", href: "/admin/staff", icon: Users },
+          {
+            name: "Universities",
+            href: "/admin/universities",
+            icon: GraduationCap,
+          },
+          { name: "Tasks", href: "/admin/tasks", icon: ClipboardList },
+          { name: "Leads", href: "/admin/students", icon: Headset },
+          { name: "Admission Academic", href: "/admissions", icon: Users },
+          { name: "Admission Intitutes", href: "/intitutes", icon: Users },
+        ]
+      : []),
 
     // 🔥 Academic Only Tabs
-    ...(role === "ACADEMIC" ? [
-      { name: "Admission", href: "/admissions", icon: Users },
-      { name: "Universities", href: "/admin/universities", icon: GraduationCap },
-      { name: "Leads", href: "/admin/students", icon: Headset },
-      ...(hasTasks ? [{ name: "Tasks", href: "/workspace", icon: ClipboardList, badge: taskCount }] : [])
-    ] : []),
+    ...(role === "ACADEMIC"
+      ? [
+          { name: "Admission", href: "/admissions", icon: Users },
+          {
+            name: "Universities",
+            href: "/admin/universities",
+            icon: GraduationCap,
+          },
+          { name: "Leads", href: "/admin/students", icon: Headset },
+          ...(hasTasks
+            ? [
+                {
+                  name: "Tasks",
+                  href: "/workspace",
+                  icon: ClipboardList,
+                  badge: taskCount,
+                },
+              ]
+            : []),
+        ]
+      : []),
 
     // 🔥 Counselor Only Tabs
-    ...(role === "COUNSELOR" ? [
-      { name: "Leads", href: "/counselor/leads", icon: Headset },
-      ...(hasTasks ? [{ name: "Tasks", href: "/workspace", icon: ClipboardList, badge: taskCount }] : [])
-    ] : []),
+    ...(role === "COUNSELOR"
+      ? [
+          { name: "Leads", href: "/counselor/leads", icon: Headset },
+          ...(hasTasks
+            ? [
+                {
+                  name: "Tasks",
+                  href: "/workspace",
+                  icon: ClipboardList,
+                  badge: taskCount,
+                },
+              ]
+            : []),
+        ]
+      : []),
 
     // 🔥 Staff Only Tabs
-    ...(role === "STAFF" ? [
-      { name: "Tasks", href: "/workspace", icon: ClipboardList, badge: taskCount }
-    ] : []),
-    
+    ...(role === "STAFF"
+      ? [
+          {
+            name: "Tasks",
+            href: "/workspace",
+            icon: ClipboardList,
+            badge: taskCount,
+          },
+        ]
+      : []),
+
     // Common Tabs
     { name: "Settings", href: "#", icon: Settings },
   ];
@@ -134,7 +177,7 @@ export default function Sidebar({ role }: SidebarProps) {
         </div>
         {/* Mobile close button */}
         {isMobileOpen && (
-          <button 
+          <button
             onClick={() => setIsMobileOpen(false)}
             className="lg:hidden p-1 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white"
           >
@@ -145,7 +188,6 @@ export default function Sidebar({ role }: SidebarProps) {
 
       {/* Nav Links */}
       <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-        
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -158,10 +200,19 @@ export default function Sidebar({ role }: SidebarProps) {
                   : "text-slate-400 hover:text-white hover:bg-slate-800/60"
               } ${isCollapsed && !isMobileOpen ? "justify-center rounded-xl border-l-0" : ""}`}
             >
-              <item.icon size={20} className={isActive ? "text-indigo-400" : "text-slate-400 group-hover:text-white transition-colors"} />
+              <item.icon
+                size={20}
+                className={
+                  isActive
+                    ? "text-indigo-400"
+                    : "text-slate-400 group-hover:text-white transition-colors"
+                }
+              />
               {(!isCollapsed || isMobileOpen) && (
                 <>
-                  <span className="text-sm font-medium flex-1">{item.name}</span>
+                  <span className="text-sm font-medium flex-1">
+                    {item.name}
+                  </span>
                   {Boolean(item.badge && item.badge > 0) && (
                     <span className="bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-xs">
                       {item.badge}
@@ -169,9 +220,11 @@ export default function Sidebar({ role }: SidebarProps) {
                   )}
                 </>
               )}
-              {isCollapsed && !isMobileOpen && Boolean(item.badge && item.badge > 0) && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-indigo-500 ring-2 ring-slate-900" />
-              )}
+              {isCollapsed &&
+                !isMobileOpen &&
+                Boolean(item.badge && item.badge > 0) && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-indigo-500 ring-2 ring-slate-900" />
+                )}
             </Link>
           );
         })}
@@ -186,7 +239,9 @@ export default function Sidebar({ role }: SidebarProps) {
           }`}
         >
           <LogOut size={20} className="text-rose-400" />
-          {(!isCollapsed || isMobileOpen) && <span className="font-semibold text-rose-400 text-sm">Logout</span>}
+          {(!isCollapsed || isMobileOpen) && (
+            <span className="font-semibold text-rose-400 text-sm">Logout</span>
+          )}
         </button>
       </div>
     </div>
