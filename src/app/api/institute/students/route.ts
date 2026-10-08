@@ -46,10 +46,15 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get("search");
     const course = searchParams.get("course");
     const status = searchParams.get("status");
+    const branch = searchParams.get("branch");
     const source = searchParams.get("source");
 
     if (course && course !== "ALL") {
       filter.course = course;
+    }
+
+    if (branch && branch !== "ALL") {
+      filter.branch = branch;
     }
 
     if (status && status !== "ALL") {

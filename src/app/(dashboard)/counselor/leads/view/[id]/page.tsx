@@ -19,7 +19,7 @@ interface ViewLeadPageProps {
 export default function ViewLeadPage({ params }: ViewLeadPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const fromAdmissions = searchParams.get('from') === 'admissions';
+  const fromAdmissions = searchParams.get('from') === 'admissions' || searchParams.get('from') === 'institutes';
   const isInstitute = searchParams.get('track') === 'institute';
   const [studentId, setStudentId] = useState<string | null>(null);
   const [student, setStudent] = useState<StudentRecord | null>(null);
@@ -57,9 +57,13 @@ export default function ViewLeadPage({ params }: ViewLeadPageProps) {
   };
 
   const goBack = () => {
+    if (fromAdmissions) {
+      router.push(isInstitute ? '/institutes' : '/admissions');
+      return;
+    }
     const isAdmin = document.cookie.includes('userRole=ADMIN');
     const trackQuery = isInstitute ? '?track=institute' : '';
-    router.push(fromAdmissions ? '/admissions' : (isAdmin ? `/admin/students${trackQuery}` : `/counselor/leads${trackQuery}`));
+    router.push(isAdmin ? `/admin/students${trackQuery}` : `/counselor/leads${trackQuery}`);
   };
 
   if (isInstitute) {

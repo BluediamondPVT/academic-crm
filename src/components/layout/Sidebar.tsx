@@ -14,6 +14,7 @@ import {
   GraduationCap,
   Headset,
   ClipboardList,
+  Laptop,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -101,14 +102,15 @@ export default function Sidebar({ role }: SidebarProps) {
           { name: "Tasks", href: "/admin/tasks", icon: ClipboardList },
           { name: "Leads", href: "/admin/students", icon: Headset },
           { name: "Admission Academic", href: "/admissions", icon: Users },
-          { name: "Admission Intitutes", href: "/intitutes", icon: Users },
+          { name: "Admission Institutes", href: "/institutes", icon: Laptop },
         ]
       : []),
 
     // 🔥 Academic Only Tabs
     ...(role === "ACADEMIC"
       ? [
-          { name: "Admission", href: "/admissions", icon: Users },
+          { name: "Admission Academic", href: "/admissions", icon: Users },
+          { name: "Admission Institutes", href: "/institutes", icon: Laptop },
           {
             name: "Universities",
             href: "/admin/universities",

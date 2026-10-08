@@ -164,11 +164,19 @@ export default function InstituteViewLead({
 
         <button
           type="button"
-          onClick={() =>
+          onClick={() => {
+            const fromParam =
+              typeof window !== "undefined" &&
+              window.location.search.includes("from=institutes")
+                ? "&from=institutes"
+                : typeof window !== "undefined" &&
+                  window.location.search.includes("from=admissions")
+                ? "&from=admissions"
+                : "";
             router.push(
-              `/counselor/leads/edit/${student._id || student.id}?track=institute`,
-            )
-          }
+              `/counselor/leads/edit/${student._id || student.id}?track=institute${fromParam}`,
+            );
+          }}
           className="px-4 py-2 bg-[#112a46] hover:bg-[#1a3d66] text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
         >
           <Edit className="h-3.5 w-3.5" />
